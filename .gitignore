@@ -1,0 +1,9 @@
+# Backup folders
+Frontend_Old/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
