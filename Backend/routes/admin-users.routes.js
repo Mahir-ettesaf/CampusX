@@ -1,0 +1,1 @@
+import express from "express";import{authenticateToken}from"../middleware/auth.middleware.js";import{getUser,listUsers}from"../controllers/admin-user.controllers.js";const r=express.Router();r.use(authenticateToken);r.get("/",listUsers);r.get("/:userId",getUser);export default r;

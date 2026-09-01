@@ -1,0 +1,6 @@
+import db from "../config/db.js";
+import { findMatchSkillData } from "./opportunity-match.model.js";
+const query=(sql,values=[])=>new Promise((resolve,reject)=>db.query(sql,values,(error,rows)=>error?reject(error):resolve(rows)));
+export const findLearningTarget=async id=>(await query("SELECT id,title,opportunity_type,company_name FROM (SELECT o.id,o.title,o.opportunity_type,c.name company_name,o.status,o.deadline FROM opportunities o LEFT JOIN companies c ON c.id=o.company_id) target WHERE id=? AND status='published' AND deadline>=CURDATE()",[id]))[0]||null;
+export const findLearningSkillData=(userId,opportunityId)=>findMatchSkillData(userId,opportunityId);
+export const findResourcesForSkills=async skillIds=>{if(!skillIds.length)return [];const rows=await query(`SELECT ar.id,ar.title,ar.resource_type,ar.subject,ar.resource_url,GROUP_CONCAT(DISTINCT s.name ORDER BY s.name SEPARATOR '|') AS helps_develop FROM academic_resources ar JOIN academic_resource_skills ars ON ars.resource_id=ar.id JOIN skills s ON s.id=ars.skill_id WHERE ar.status='published' AND ars.skill_id IN (${skillIds.map(()=>'?').join(',')}) GROUP BY ar.id,ar.title,ar.resource_type,ar.subject,ar.resource_url,ar.created_at ORDER BY COUNT(DISTINCT ars.skill_id) DESC, ar.created_at DESC, ar.id DESC`,skillIds);return rows.map(row=>({...row,helps_develop:row.helps_develop.split('|')}));};

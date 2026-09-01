@@ -2,6 +2,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { createUser, findUserByEmail } from "../models/user.model.js";
 
+const PUBLIC_REGISTRATION_ROLES = new Set(["student", "graduate", "faculty", "recruiter"]);
+const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+
 // =========================
 // Register Controller
 // =========================
@@ -15,21 +18,39 @@ export const register = async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedRole = role.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: "Please provide a valid email address" });
+    }
+
+    if (!PUBLIC_REGISTRATION_ROLES.has(normalizedRole)) {
+      return res.status(400).json({ success: false, message: "Please select a valid public registration role" });
+    }
+
     // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const userData = {
-      full_name,
-      email,
+      full_name: full_name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      role,
+      role: normalizedRole,
     };
 
     createUser(userData, (err, result) => {
       if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(409).json({
+            success: false,
+            message: "An account with this email already exists",
+          });
+        }
+
         return res.status(500).json({
           success: false,
-          message: err.message,
+          message: "Unable to register the user",
         });
       }
 
@@ -42,7 +63,7 @@ export const register = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Unable to register the user",
     });
   }
 };
@@ -54,13 +75,30 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    findUserByEmail(email, async (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          success: false,
-          message: err.message,
-        });
-      }
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
+    }
+
+    findUserByEmail(normalizedEmail, async (err, result) => {
+      try {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: "Unable to log in",
+          });
+        }
 
       // User not found
       if (result.length === 0) {
@@ -69,9 +107,6 @@ export const login = async (req, res) => {
           message: "User not found",
         });
       }
-      console.log("Entered Password:", password);
-      console.log("Stored Hash:", result[0].password);
-
       // Compare password
       const isMatch = await bcrypt.compare(password, result[0].password);
 
@@ -104,11 +139,24 @@ export const login = async (req, res) => {
           role: result[0].role,
         },
       });
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: "Unable to log in",
+        });
+      }
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Unable to log in",
     });
   }
+};
+
+export const getCurrentUser = (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: req.user,
+  });
 };

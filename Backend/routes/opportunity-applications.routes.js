@@ -1,0 +1,1 @@
+import express from "express";import{authenticateToken}from"../middleware/auth.middleware.js";import{apply,listFor}from"../controllers/application.controllers.js";const r=express.Router();r.use(authenticateToken);r.post("/:opportunityId/applications",apply);r.get("/:opportunityId/applications",listFor);export default r;

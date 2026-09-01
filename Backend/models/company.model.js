@@ -1,0 +1,9 @@
+import db from "../config/db.js";
+const query=(sql,values=[])=>new Promise((resolve,reject)=>db.query(sql,values,(error,results)=>error?reject(error):resolve(results)));
+const fields="c.id,c.created_by,c.name,c.description,c.website,c.logo,c.location,c.approval_status,c.approved_by,c.approved_at,c.created_at,c.updated_at,creator.full_name AS creator_name,creator.email AS creator_email";
+export const createCompany=async(data)=>(await query("INSERT INTO companies(created_by,name,description,website,logo,location,approval_status) VALUES(?,?,?,?,?,?,'pending')",[data.created_by,data.name,data.description,data.website,data.logo,data.location])).insertId;
+export const findCompany=async(id)=>(await query(`SELECT ${fields} FROM companies c LEFT JOIN users creator ON creator.id=c.created_by WHERE c.id=?`,[id]))[0]||null;
+export const listCompanies=async({status,creatorId}={})=>{const where=[],values=[];if(status){where.push("c.approval_status=?");values.push(status)}if(creatorId){where.push("c.created_by=?");values.push(creatorId)}return query(`SELECT ${fields} FROM companies c LEFT JOIN users creator ON creator.id=c.created_by${where.length?` WHERE ${where.join(" AND ")}`:""} ORDER BY c.name ASC`,values)};
+export const updateCompany=async(id,data)=>{const keys=Object.keys(data);if(keys.length)await query(`UPDATE companies SET ${keys.map(key=>`\`${key}\`=?`).join(",")} WHERE id=?`,[...keys.map(key=>data[key]),id]);return findCompany(id)};
+export const setApproval=async(id,status,adminId)=>{await query("UPDATE companies SET approval_status=?,approved_by=?,approved_at=CURRENT_TIMESTAMP WHERE id=?",[status,adminId,id]);return findCompany(id)};
+export const findApprovedRecruiterCompany=async(userId)=>(await query("SELECT c.id FROM recruiter_profiles rp JOIN companies c ON c.id=rp.company_id WHERE rp.user_id=? AND c.approval_status='approved'",[userId]))[0]||null;

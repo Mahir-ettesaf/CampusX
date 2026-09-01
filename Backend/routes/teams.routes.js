@@ -1,0 +1,20 @@
+import express from "express";
+import { authenticateToken } from "../middleware/auth.middleware.js";
+import { addMember, createTask, createTeam, deleteTeamForOwner, deleteTask, getMembers, getTeam, getTeamTasks, leaveTeam, listTeams, removeMember, updateTask, updateTeamForOwner } from "../controllers/team.controllers.js";
+
+const router = express.Router();
+router.use(authenticateToken);
+router.get("/", listTeams);
+router.post("/", createTeam);
+router.get("/:teamId", getTeam);
+router.put("/:teamId", updateTeamForOwner);
+router.delete("/:teamId", deleteTeamForOwner);
+router.get("/:teamId/members", getMembers);
+router.post("/:teamId/members", addMember);
+router.delete("/:teamId/members/me", leaveTeam);
+router.delete("/:teamId/members/:userId", removeMember);
+router.get("/:teamId/tasks", getTeamTasks);
+router.post("/:teamId/tasks", createTask);
+router.put("/:teamId/tasks/:taskId", updateTask);
+router.delete("/:teamId/tasks/:taskId", deleteTask);
+export default router;

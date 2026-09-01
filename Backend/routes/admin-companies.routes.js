@@ -1,0 +1,2 @@
+import express from "express";import { authenticateToken } from "../middleware/auth.middleware.js";import { list } from "../controllers/company.controllers.js";
+const router=express.Router();router.use(authenticateToken);router.get("/",(req,res,next)=>req.user.role==="admin"?next():res.status(403).json({success:false,message:"Only administrators can view all companies"}),list);export default router;

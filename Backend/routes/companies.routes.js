@@ -1,0 +1,2 @@
+import express from "express";import { authenticateToken } from "../middleware/auth.middleware.js";import { approval,create,get,list,update } from "../controllers/company.controllers.js";
+const router=express.Router();router.use(authenticateToken);router.get("/",list);router.post("/",create);router.get("/:companyId",get);router.put("/:companyId",update);router.put("/:companyId/approval",approval);export default router;

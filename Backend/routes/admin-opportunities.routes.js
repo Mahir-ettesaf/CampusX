@@ -1,0 +1,1 @@
+import express from"express";import{authenticateToken}from"../middleware/auth.middleware.js";import{getAdminOpportunity,listAdminOpportunities}from"../controllers/admin-opportunity.controllers.js";const r=express.Router();r.use(authenticateToken);r.get("/",listAdminOpportunities);r.get("/:opportunityId",getAdminOpportunity);export default r;

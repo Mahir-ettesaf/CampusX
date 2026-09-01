@@ -1,0 +1,1 @@
+import express from "express";import { authenticateToken } from "../middleware/auth.middleware.js";import { getLearningPath } from "../controllers/learning-path.controllers.js";const router=express.Router();router.use(authenticateToken);router.get("/",getLearningPath);export default router;
