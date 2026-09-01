@@ -33,7 +33,8 @@ export const getOpportunityRecommendations = async (req, res) => {
         };
       }),
     });
-  } catch {
+  } catch (error) {
+    console.error("Opportunity recommendations fetch failed:", error?.code || error?.message || error);
     return fail(res, 500, "Unable to load opportunity recommendations");
   }
 };

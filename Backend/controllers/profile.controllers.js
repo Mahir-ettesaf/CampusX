@@ -62,7 +62,8 @@ export const getProfile = async (req, res) => {
     }
 
     return res.status(200).json(response);
-  } catch {
+  } catch (error) {
+    console.error("Profile fetch failed:", error?.code || error?.message || error);
     return respondInternalError(res);
   }
 };
