@@ -1,9 +1,14 @@
 import {
   createUserResume,
   deleteUserResume,
+  findUserResume,
+  findUserResumeForReview,
   findUserResumes,
+  updateUserResumeDocument,
   updateUserResume,
 } from "../models/resume.model.js";
+import { AiResumeReviewError, reviewResumeContent } from "../services/ai-resume-review.service.js";
+import { extractResumeText, removeStoredResumeDocument, ResumeDocumentError, storeResumeDocument } from "../services/resume-document.service.js";
 
 const EDITABLE_FIELDS = new Set(["title", "summary", "file_url", "is_primary"]);
 const IDENTITY_FIELDS = new Set(["user_id", "owner_id", "email", "role"]);
@@ -161,5 +166,54 @@ export const deleteMyResume = async (req, res) => {
     });
   } catch {
     return respondInternalError(res);
+  }
+};
+
+export const reviewMyResume = async (req, res) => {
+  if (req.user.role !== "student" && req.user.role !== "graduate") {
+    return res.status(403).json({ success: false, message: "AI resume review is available to students and graduates only" });
+  }
+
+  const resumeId = getResumeId(req.params.resumeId);
+  if (!resumeId) return res.status(400).json({ success: false, message: "Provide a valid resume ID" });
+
+  try {
+    const resume = await findUserResumeForReview(req.user.id, resumeId);
+    if (!resume) return res.status(404).json({ success: false, message: "Resume was not found" });
+    const content = resume.extracted_text?.trim() || resume.summary?.trim();
+    if (!content) {
+      return res.status(400).json({ success: false, message: "Upload a readable resume or add a resume summary before requesting an AI review" });
+    }
+
+    const review = await reviewResumeContent({ title: resume.title, content });
+    return res.status(200).json({ success: true, review: { resume_id: resume.id, ...review } });
+  } catch (error) {
+    if (error instanceof AiResumeReviewError) {
+      return res.status(error.status).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({ success: false, message: "Unable to review the resume" });
+  }
+};
+
+export const uploadMyResumeDocument = async (req, res) => {
+  if (req.user.role !== "student" && req.user.role !== "graduate") {
+    return res.status(403).json({ success: false, message: "Resume upload is available to students and graduates only" });
+  }
+  const resumeId = getResumeId(req.params.resumeId);
+  if (!resumeId) return res.status(400).json({ success: false, message: "Provide a valid resume ID" });
+
+  let storedDocument;
+  try {
+    const resume = await findUserResume(req.user.id, resumeId);
+    if (!resume) return res.status(404).json({ success: false, message: "Resume was not found" });
+    const extracted = await extractResumeText(req.file);
+    storedDocument = await storeResumeDocument(req.file.buffer, req.user.id, resumeId, extracted.type);
+    const updatedResume = await updateUserResumeDocument(req.user.id, resumeId, storedDocument.fileUrl, extracted.text);
+    if (!updatedResume) throw new ResumeDocumentError(404, "Resume was not found");
+    return res.status(200).json({ success: true, message: "Resume uploaded and text extracted successfully", resume: updatedResume });
+  } catch (error) {
+    if (storedDocument) await removeStoredResumeDocument(storedDocument.publicId);
+    if (error instanceof ResumeDocumentError) return res.status(error.status).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "Unable to upload the resume document" });
   }
 };

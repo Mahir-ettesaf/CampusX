@@ -53,6 +53,22 @@ export const findUserResume = async (userId, resumeId) => {
   return results[0] || null;
 };
 
+export const findUserResumeForReview = async (userId, resumeId) => {
+  const results = await query(
+    `SELECT ${resumeColumns}, extracted_text FROM resumes WHERE id = ? AND user_id = ?`,
+    [resumeId, userId],
+  );
+  return results[0] || null;
+};
+
+export const updateUserResumeDocument = async (userId, resumeId, fileUrl, extractedText) => {
+  const result = await query(
+    "UPDATE resumes SET file_url = ?, extracted_text = ? WHERE id = ? AND user_id = ?",
+    [fileUrl, extractedText, resumeId, userId],
+  );
+  return result.affectedRows ? findUserResume(userId, resumeId) : null;
+};
+
 export const createUserResume = async (userId, resumeData) =>
   withTransaction(async () => {
     const existingResumes = await query("SELECT id FROM resumes WHERE user_id = ? FOR UPDATE", [userId]);
