@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import { clearAuthSession, getStoredAuthSession } from "../../services/authservice";
@@ -20,6 +21,7 @@ import {
   CompanyInput,
   updateCompany,
 } from "../../services/company.service";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 type Form = { name: string; description: string; website: string; logo: string; location: string };
 
@@ -135,15 +137,15 @@ export default function CompanyDetailsScreen() {
     }
   };
 
-  if (loading && !companyData) return <View style={styles.center}><ActivityIndicator size="large" color="#2563EB" /></View>;
+  if (loading && !companyData) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /><Text style={styles.loadingText}>Loading company details…</Text></View>;
   if (!companyData) return <View style={styles.center}><Text style={styles.error}>{error || "Company not found."}</Text><TouchableOpacity onPress={() => load()}><Text style={styles.link}>Retry</Text></TouchableOpacity><TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.link}>Back to Recruiter Profile</Text></TouchableOpacity></View>;
 
   return <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}>
     <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.link}>Back to Recruiter Profile</Text></TouchableOpacity>
-    <Text style={styles.title}>Company Details</Text>
+    <View style={styles.header}><View style={styles.headerIcon}><Ionicons name="business-outline" size={23} color={colors.primary} /></View><View><Text style={styles.title}>Company Details</Text><Text style={styles.headerSubtitle}>Manage your company information.</Text></View></View>
     {error ? <Text style={styles.error}>{error}</Text> : null}
     <View style={styles.card}>
-      <Text style={styles.status}>{approvalLabel(companyData.approval_status)}</Text>
+      <Text style={[styles.status, companyData.approval_status === "approved" && styles.approvedStatus, companyData.approval_status === "rejected" && styles.rejectedStatus]}>{approvalLabel(companyData.approval_status)}</Text>
       <Text style={styles.note}>{approvalMessage(companyData.approval_status)}</Text>
       {editing ? <>
         <Text style={styles.label}>Company Name</Text><TextInput style={styles.input} value={form.name} onChangeText={(value) => updateField("name", value)} editable={!saving} />
@@ -166,9 +168,9 @@ export default function CompanyDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }, page: { flex: 1, backgroundColor: "#fff" }, content: { padding: 24 },
-  link: { color: "#2563EB", fontWeight: "600", marginBottom: 16 }, title: { fontSize: 28, fontWeight: "bold", color: "#1E3A8A" }, card: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginTop: 20 },
-  status: { color: "#047857", fontWeight: "700" }, note: { color: "#4B5563", marginTop: 6 }, name: { fontSize: 22, fontWeight: "700", color: "#111827", marginTop: 18 }, label: { fontWeight: "700", color: "#374151", marginTop: 16 }, value: { color: "#4B5563", marginTop: 5 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 11, marginTop: 6 }, multiline: { minHeight: 100, textAlignVertical: "top" }, error: { color: "#DC2626", marginTop: 12, textAlign: "center" },
-  primary: { backgroundColor: "#2563EB", padding: 14, borderRadius: 9, alignItems: "center", marginTop: 20 }, primaryText: { color: "#fff", fontWeight: "700" }, secondary: { borderWidth: 1, borderColor: "#2563EB", padding: 13, borderRadius: 9, alignItems: "center", marginTop: 10 }, secondaryText: { color: "#2563EB", fontWeight: "700" }, disabled: { opacity: 0.6 },
+  center: { ...ui.centered }, page: { ...ui.screen }, content: { ...ui.screenContent },
+  loadingText: { ...typography.caption, marginTop: spacing.md }, link: { color: colors.primary, fontWeight: "700", fontSize: 14, marginBottom: spacing.md }, header: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.lg }, headerIcon: { width: 46, height: 46, borderRadius: radius.md, justifyContent: "center", alignItems: "center", backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border }, title: { ...typography.screenTitle }, headerSubtitle: { ...typography.caption, marginTop: spacing.xs }, card: { ...ui.card, marginTop: spacing.md },
+  status: { alignSelf: "flex-start", color: colors.warning, backgroundColor: "#3B301A", fontSize: 12, fontWeight: "800", borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, overflow: "hidden" }, approvedStatus: { color: colors.success, backgroundColor: "#123A34" }, rejectedStatus: { color: colors.error, backgroundColor: "#3A2028" }, note: { color: colors.textMuted, marginTop: spacing.sm, lineHeight: 20 }, name: { color: colors.text, fontSize: 22, fontWeight: "800", marginTop: spacing.lg }, label: { color: colors.text, fontSize: 14, fontWeight: "800", marginTop: spacing.lg }, value: { color: colors.textMuted, marginTop: spacing.xs, lineHeight: 20 },
+  input: { ...ui.input, marginTop: spacing.xs }, multiline: { minHeight: 104, textAlignVertical: "top" }, error: { color: colors.error, marginTop: spacing.md, textAlign: "center", lineHeight: 20 },
+  primary: { ...ui.primaryButton, marginTop: spacing.xl }, primaryText: { ...ui.primaryButtonText }, secondary: { ...ui.outlineButton, minHeight: 48, marginTop: spacing.sm }, secondaryText: { ...ui.outlineButtonText }, disabled: { ...ui.disabled },
 });

@@ -20,6 +20,7 @@ import {
   Opportunity,
 } from "../../services/opportunity.service";
 import { getMatchErrorMessage, getOpportunityMatch, isUnauthorizedMatchError, OpportunityMatch } from "../../services/opportunity-match.service";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 const typeLabels: Record<Opportunity["opportunity_type"], string> = {
   internship: "Internship",
@@ -30,6 +31,7 @@ const typeLabels: Record<Opportunity["opportunity_type"], string> = {
 };
 
 const isApplicantRole = (role?: string) => role === "student" || role === "graduate";
+const statusLabel = (status: Opportunity["status"]) => status.charAt(0).toUpperCase() + status.slice(1);
 
 export default function OpportunityDetailsScreen() {
   const navigation = useNavigation<any>();
@@ -138,7 +140,7 @@ export default function OpportunityDetailsScreen() {
             <Text style={styles.error}>{error}</Text>
             <TouchableOpacity onPress={load}><Text style={styles.back}>Retry</Text></TouchableOpacity>
           </>
-        ) : <ActivityIndicator size="large" color="#2563EB" />}
+        ) : <ActivityIndicator size="large" color={colors.primary} />}
       </View>
     );
   }
@@ -148,14 +150,20 @@ export default function OpportunityDetailsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>Back to Opportunities</Text></TouchableOpacity>
-      <Text style={styles.title}>{opportunity.title}</Text>
-      <Text style={styles.type}>{typeLabels[opportunity.opportunity_type]}</Text>
-      <Text style={styles.body}>{opportunity.description}</Text>
-      <Info label="Company" value={opportunity.company_name || "Not provided"} />
-      <Info label="Location" value={opportunity.location || "Not provided"} />
-      <Info label="Work style" value={opportunity.is_remote ? "Remote" : "On-site"} />
-      <Info label="Eligibility" value={opportunity.eligibility || "Not provided"} />
-      <Info label="Deadline" value={opportunity.deadline.slice(0, 10)} />
+      <View style={styles.heroCard}>
+        <View style={styles.badgeRow}><Text style={styles.type}>{typeLabels[opportunity.opportunity_type]}</Text><Text style={[styles.statusBadge, opportunity.status === "closed" && styles.closedStatus, opportunity.status === "draft" && styles.draftStatus]}>{statusLabel(opportunity.status)}</Text></View>
+        <Text style={styles.title}>{opportunity.title}</Text>
+        <Text style={styles.companyName}>{opportunity.company_name || "CampusX opportunity"}</Text>
+      </View>
+      <View style={styles.descriptionCard}><Text style={styles.sectionEyebrow}>OPPORTUNITY OVERVIEW</Text><Text style={styles.body}>{opportunity.description}</Text></View>
+      <View style={styles.infoCard}>
+        <Text style={styles.infoHeading}>Opportunity details</Text>
+        <Info label="Company" value={opportunity.company_name || "Not provided"} />
+        <Info label="Location" value={opportunity.location || "Not provided"} />
+        <Info label="Work style" value={opportunity.is_remote ? "Remote" : "On-site"} />
+        <Info label="Eligibility" value={opportunity.eligibility || "Not provided"} />
+        <Info label="Deadline" value={opportunity.deadline.slice(0, 10)} />
+      </View>
 
       {canApply ? <TouchableOpacity style={styles.requiredSkillsButton} onPress={() => navigation.navigate("OpportunitySkills", { opportunityId })}><Text style={styles.requiredSkillsText}>Required Skills</Text></TouchableOpacity> : null}
 
@@ -215,26 +223,36 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  container: { flex: 1, backgroundColor: "#fff" }, content: { padding: 24 },
-  back: { color: "#2563EB", fontWeight: "600", marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: "bold", color: "#1E3A8A" },
-  type: { color: "#2563EB", fontWeight: "600", marginTop: 6 },
-  body: { color: "#4B5563", fontSize: 16, lineHeight: 23, marginTop: 8 },
-  info: { marginTop: 18 }, label: { color: "#333", fontWeight: "700" },
-  panel: { marginTop: 28, padding: 18, borderRadius: 10, backgroundColor: "#EFF6FF" },
-  panelTitle: { color: "#1E3A8A", fontSize: 18, fontWeight: "700" },
-  helper: { color: "#4B5563", marginTop: 8 },
-  resumeOption: { padding: 10, borderWidth: 1, borderColor: "#2563EB", marginTop: 8, borderRadius: 8 },
-  selectedResume: { padding: 10, backgroundColor: "#BFDBFE", marginTop: 8, borderRadius: 8 },
-  resumeText: { color: "#1E3A8A", fontWeight: "600" },
-  input: { borderWidth: 1, borderColor: "#d1d5db", borderRadius: 8, padding: 10, minHeight: 80, marginTop: 12, textAlignVertical: "top" },
-  applyButton: { backgroundColor: "#10B981", padding: 13, borderRadius: 8, alignItems: "center", marginTop: 12 },
-  disabledButton: { opacity: 0.55 }, applyText: { color: "#fff", fontWeight: "700" },
-  requiredSkillsButton: { borderWidth: 1, borderColor: "#2563EB", padding: 13, borderRadius: 8, alignItems: "center", marginTop: 22 },
-  requiredSkillsText: { color: "#2563EB", fontWeight: "700" },
-  matchPanel: { marginTop: 18, padding: 18, borderRadius: 10, backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#BBF7D0" },
-  matchTitle: { color: "#166534", fontSize: 19, fontWeight: "700" }, matchLoading: { marginTop: 14 }, matchPercentage: { color: "#166534", fontSize: 32, fontWeight: "bold", marginTop: 10 },
-  matchUnavailable: { color: "#166534", fontWeight: "700", marginTop: 12 }, matchSection: { marginTop: 16 }, matchSectionTitle: { color: "#166534", fontWeight: "700" }, matchSkill: { color: "#166534", marginTop: 7 }, missingSkill: { color: "#4B5563", marginTop: 7 }, retry: { color: "#2563EB", fontWeight: "700", marginTop: 10 },
-  error: { color: "#DC2626", marginTop: 10, lineHeight: 20 },
+  loading: { ...ui.centered },
+  container: { ...ui.screen }, content: { ...ui.screenContent },
+  back: { color: colors.primary, fontWeight: "700", fontSize: 14, marginBottom: spacing.md },
+  heroCard: { ...ui.card, backgroundColor: colors.backgroundElevated, marginBottom: spacing.md },
+  badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.md },
+  type: { alignSelf: "flex-start", color: colors.primary, backgroundColor: "#103553", borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, fontSize: 11, fontWeight: "800" },
+  statusBadge: { alignSelf: "flex-start", color: colors.success, backgroundColor: "#123A34", borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, fontSize: 11, fontWeight: "800" },
+  closedStatus: { color: colors.warning, backgroundColor: "#3B301A" },
+  draftStatus: { color: colors.secondary, backgroundColor: "#292750" },
+  title: { ...typography.screenTitle, fontSize: 27, lineHeight: 34 },
+  companyName: { color: colors.textMuted, fontSize: 15, fontWeight: "700", marginTop: spacing.sm },
+  descriptionCard: { ...ui.card, marginBottom: spacing.md },
+  sectionEyebrow: { color: colors.primary, fontSize: 10, letterSpacing: 1.1, fontWeight: "800", marginBottom: spacing.xs },
+  body: { color: colors.textMuted, fontSize: 16, lineHeight: 23, marginTop: spacing.xs },
+  infoCard: { ...ui.card, marginBottom: spacing.md },
+  infoHeading: { ...typography.cardTitle, marginBottom: spacing.xs },
+  info: { borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: spacing.md, marginTop: spacing.md }, label: { color: colors.text, fontSize: 13, fontWeight: "800" },
+  panel: { ...ui.card, marginTop: spacing.xl },
+  panelTitle: { ...typography.cardTitle },
+  helper: { color: colors.textMuted, marginTop: spacing.sm, lineHeight: 20 },
+  resumeOption: { padding: spacing.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.input, marginTop: spacing.sm, borderRadius: radius.md },
+  selectedResume: { padding: spacing.md, backgroundColor: "#103553", borderWidth: 1, borderColor: colors.primary, marginTop: spacing.sm, borderRadius: radius.md },
+  resumeText: { color: colors.text, fontWeight: "700" },
+  input: { ...ui.input, minHeight: 90, marginTop: spacing.md, textAlignVertical: "top" },
+  applyButton: { ...ui.primaryButton, marginTop: spacing.md },
+  disabledButton: { ...ui.disabled }, applyText: { ...ui.primaryButtonText },
+  requiredSkillsButton: { ...ui.outlineButton, minHeight: 48, marginTop: spacing.md },
+  requiredSkillsText: { ...ui.outlineButtonText },
+  matchPanel: { ...ui.card, marginTop: spacing.md, borderColor: "#315879", backgroundColor: colors.surfaceRaised },
+  matchTitle: { color: colors.primary, fontSize: 19, fontWeight: "800" }, matchLoading: { marginTop: spacing.md }, matchPercentage: { color: colors.primary, fontSize: 34, fontWeight: "800", marginTop: spacing.sm },
+  matchUnavailable: { color: colors.text, fontWeight: "800", marginTop: spacing.md }, matchSection: { marginTop: spacing.lg }, matchSectionTitle: { color: colors.text, fontWeight: "800" }, matchSkill: { color: colors.success, marginTop: spacing.sm }, missingSkill: { color: colors.warning, marginTop: spacing.sm }, retry: { color: colors.primary, fontWeight: "800", marginTop: spacing.sm },
+  error: { color: colors.error, marginTop: spacing.sm, lineHeight: 20, textAlign: "center" },
 });

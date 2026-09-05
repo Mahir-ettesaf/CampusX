@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import { clearAuthSession } from "../../services/authservice";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import {
   Certificate,
   CertificateInput,
@@ -221,7 +222,7 @@ export default function CertificatesScreen() {
   };
 
   if (isLoading) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2563EB" /></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
   return (
@@ -229,13 +230,13 @@ export default function CertificatesScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadCertificates(true)} />}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadCertificates(true)} tintColor={colors.primary} />}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} disabled={isSaving}>
         <Text style={styles.backText}>Back to Profile</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Certificates</Text>
-      <Text style={styles.subtitle}>Add and manage the certificates on your CampusX profile.</Text>
+      <Text style={styles.subtitle}>Showcase verified learning, achievements, and professional credentials.</Text>
 
       {!!errorMessage && (
         <View style={styles.errorSection}>
@@ -317,40 +318,18 @@ function FormInput({
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#fff" },
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 24, paddingBottom: 48 },
-  backButton: { alignSelf: "flex-start", marginBottom: 16 },
-  backText: { color: "#2563EB", fontWeight: "600" },
-  title: { color: "#1E3A8A", fontSize: 30, fontWeight: "bold", marginBottom: 6 },
-  subtitle: { color: "#666", fontSize: 16, marginBottom: 22 },
-  sectionTitle: { color: "#1E3A8A", fontSize: 20, fontWeight: "700", marginBottom: 12 },
-  formSection: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", marginBottom: 24, paddingBottom: 24 },
-  inputGroup: { marginBottom: 14 },
-  label: { color: "#333", fontSize: 15, fontWeight: "600", marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, fontSize: 16, color: "#333" },
-  multilineInput: { minHeight: 96 },
-  primaryButton: { backgroundColor: "#10B981", padding: 15, borderRadius: 10, alignItems: "center" },
-  primaryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  cancelButton: { borderWidth: 1, borderColor: "#666", borderRadius: 10, padding: 13, alignItems: "center", marginTop: 10 },
-  cancelButtonText: { color: "#666", fontWeight: "600" },
-  disabledButton: { opacity: 0.7 },
-  errorSection: { alignItems: "center", marginBottom: 14 },
-  errorText: { color: "#DC2626", textAlign: "center", marginBottom: 10 },
-  retryButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  retryButtonText: { color: "#2563EB", fontWeight: "600" },
-  emptyState: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 18 },
-  emptyTitle: { color: "#333", fontSize: 18, fontWeight: "700", marginBottom: 6 },
-  emptyText: { color: "#666", fontSize: 16, lineHeight: 22 },
-  certificateCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginBottom: 12 },
-  certificateTitle: { color: "#333", fontSize: 18, fontWeight: "700" },
-  organization: { color: "#2563EB", fontWeight: "600", marginTop: 4 },
-  details: { color: "#4B5563", fontSize: 14, marginTop: 8 },
-  credentialUrl: { color: "#2563EB", fontSize: 14, marginTop: 8 },
-  description: { color: "#4B5563", fontSize: 15, lineHeight: 21, marginTop: 10 },
-  actionRow: { flexDirection: "row", gap: 10, marginTop: 14 },
-  editButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  editButtonText: { color: "#2563EB", fontWeight: "600" },
-  deleteButton: { borderWidth: 1, borderColor: "#DC2626", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  deleteButtonText: { color: "#DC2626", fontWeight: "600" },
+  loadingContainer: ui.centered, container: ui.screen, content: ui.screenContent,
+  backButton: { alignSelf: "flex-start", marginBottom: spacing.lg }, backText: ui.textButton,
+  title: typography.screenTitle, subtitle: { ...typography.caption, fontSize: 16, marginTop: spacing.xs, marginBottom: spacing.xl },
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  formSection: { ...ui.card, marginBottom: spacing.xl }, inputGroup: { marginBottom: spacing.md },
+  label: { color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: spacing.sm }, input: ui.input, multilineInput: { minHeight: 104 },
+  primaryButton: ui.primaryButton, primaryButtonText: ui.primaryButtonText,
+  cancelButton: { ...ui.outlineButton, marginTop: spacing.sm, borderColor: colors.textMuted }, cancelButtonText: { ...ui.outlineButtonText, color: colors.textMuted }, disabledButton: ui.disabled,
+  errorSection: { ...ui.errorState, backgroundColor: colors.surface, borderRadius: radius.md, marginBottom: spacing.lg }, errorText: { color: colors.error, textAlign: "center", marginBottom: spacing.sm }, retryButton: ui.outlineButton, retryButtonText: ui.outlineButtonText,
+  emptyState: { ...ui.emptyState, ...ui.card }, emptyTitle: typography.cardTitle, emptyText: typography.caption,
+  certificateCard: { ...ui.card, marginBottom: spacing.md }, certificateTitle: typography.cardTitle, organization: { color: colors.primary, fontWeight: "700", marginTop: spacing.xs },
+  details: { ...typography.caption, marginTop: spacing.sm }, credentialUrl: { color: colors.primary, fontSize: 14, marginTop: spacing.sm }, description: { ...typography.body, color: colors.textMuted, marginTop: spacing.md },
+  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.lg }, editButton: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, editButtonText: { color: colors.primary, fontWeight: "700" },
+  deleteButton: { borderWidth: 1, borderColor: colors.error, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, deleteButtonText: { color: colors.error, fontWeight: "700" },
 });

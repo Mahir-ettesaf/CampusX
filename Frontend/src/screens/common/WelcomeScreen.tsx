@@ -1,28 +1,24 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<any>();
 
   return (
-    <View style={styles.container}>
+    <View style={[ui.screen, styles.container]}>
+      <View style={styles.brandMark}><Text style={styles.brandMarkText}>CX</Text></View>
       <Text style={styles.title}>CampusX</Text>
+      <Text style={styles.subtitle}>Your career and campus experience, connected.</Text>
 
-      <Text style={styles.subtitle}>Intelligent Student Success Platform</Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Login")}
-      >
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, styles.registerButton]}
-        onPress={() => navigation.navigate("Register")}
-      >
-        <Text style={styles.buttonText}>Create Account</Text>
-      </TouchableOpacity>
+      <View style={styles.actions}>
+        <TouchableOpacity style={ui.primaryButton} onPress={() => navigation.navigate("Login")}>
+          <Text style={ui.primaryButtonText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[ui.outlineButton, styles.registerButton]} onPress={() => navigation.navigate("Register")}>
+          <Text style={ui.outlineButtonText}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -32,40 +28,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
-    backgroundColor: "#FFFFFF",
+    padding: spacing.xl,
   },
-
+  brandMark: { width: 72, height: 72, borderRadius: 36, justifyContent: "center", alignItems: "center", backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.primary, marginBottom: spacing.lg },
+  brandMarkText: { color: colors.primary, fontSize: 23, fontWeight: "800", letterSpacing: 1 },
   title: {
+    ...typography.screenTitle,
     fontSize: 36,
-    fontWeight: "bold",
-    color: "#1E3A8A",
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
-
   subtitle: {
-    fontSize: 16,
+    ...typography.body,
     textAlign: "center",
-    color: "#666",
-    marginBottom: 50,
+    color: colors.textMuted,
+    maxWidth: 290,
   },
-
-  button: {
+  actions: {
     width: "100%",
-    backgroundColor: "#2563EB",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 15,
+    gap: spacing.md,
+    marginTop: 48,
   },
-
-  registerButton: {
-    backgroundColor: "#10B981",
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  registerButton: { borderColor: colors.secondary },
 });

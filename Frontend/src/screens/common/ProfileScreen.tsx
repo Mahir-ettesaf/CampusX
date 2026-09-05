@@ -21,6 +21,7 @@ import {
   ProfileResponse,
   updateProfile,
 } from "../../services/profile.service";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 const emptyProfileForm: CommonProfileInput = {
   headline: "",
@@ -120,7 +121,7 @@ export default function ProfileScreen() {
   if (isLoading && !profileData) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -129,18 +130,20 @@ export default function ProfileScreen() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.errorText}>{errorMessage || "Unable to load your profile."}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadProfile()}>
-          <Text style={styles.buttonText}>Retry</Text>
+        <TouchableOpacity style={[ui.primaryButton, styles.retryButton]} onPress={() => loadProfile()}>
+          <Text style={ui.primaryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   const { user, academic_profile, faculty_profile, recruiter_profile } = profileData;
+  const profileValues = Object.values(form);
+  const profileCompletion = Math.round((profileValues.filter((value) => value.trim().length > 0).length / profileValues.length) * 100);
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[ui.screen, styles.container]}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadProfile(true)} />}
     >
@@ -149,66 +152,64 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <View style={styles.identitySection}>
-        {user.profile_picture ? (
-          <Image source={{ uri: user.profile_picture }} style={styles.profilePicture} />
-        ) : (
-          <View style={styles.profilePlaceholder}>
-            <Text style={styles.placeholderText}>Profile photo</Text>
-          </View>
-        )}
+        <View style={styles.avatarWrap}>
+          {user.profile_picture ? (
+            <Image source={{ uri: user.profile_picture }} style={styles.profilePicture} />
+          ) : (
+            <View style={styles.profilePlaceholder}>
+              <Text style={styles.placeholderText}>{user.full_name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</Text>
+            </View>
+          )}
+          <View style={styles.avatarAffordance}><Text style={styles.avatarAffordanceText}>Profile</Text></View>
+        </View>
         <Text style={styles.name}>{user.full_name}</Text>
         <Text style={styles.details}>{user.email}</Text>
-        <Text style={styles.role}>{user.role}</Text>
+        <View style={styles.roleBadge}><Text style={styles.role}>{user.role}</Text></View>
+        {academic_profile ? <Text style={styles.academicSummary}>{[academic_profile.program, academic_profile.department].filter(Boolean).join(" · ")}</Text> : null}
       </View>
 
       {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-      <Text style={styles.sectionTitle}>Professional Profile</Text>
-      <ProfileInput label="Headline" value={form.headline} onChangeText={(value) => updateField("headline", value)} />
-      <ProfileInput label="Bio" value={form.bio} onChangeText={(value) => updateField("bio", value)} multiline />
-      <ProfileInput label="Phone" value={form.phone} onChangeText={(value) => updateField("phone", value)} keyboardType="phone-pad" />
-      <ProfileInput label="Location" value={form.location} onChangeText={(value) => updateField("location", value)} />
-      <ProfileInput label="LinkedIn URL" value={form.linkedin_url} onChangeText={(value) => updateField("linkedin_url", value)} autoCapitalize="none" />
-      <ProfileInput label="GitHub username" value={form.github_username} onChangeText={(value) => updateField("github_username", value)} autoCapitalize="none" />
-      <ProfileInput label="Portfolio URL" value={form.portfolio_url} onChangeText={(value) => updateField("portfolio_url", value)} autoCapitalize="none" />
+      <View style={styles.completionCard}>
+        <View style={styles.completionHeader}><View><Text style={styles.cardEyebrow}>PROFILE COMPLETION</Text><Text style={styles.completionTitle}>Keep your professional profile current</Text></View><Text style={styles.completionPercent}>{profileCompletion}%</Text></View>
+        <View style={ui.progressTrack}><View style={[ui.progressFill, { width: `${profileCompletion}%` }]} /></View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Professional profile</Text>
+      <View style={styles.formCard}>
+        <ProfileInput label="Headline" value={form.headline} onChangeText={(value) => updateField("headline", value)} />
+        <ProfileInput label="Bio" value={form.bio} onChangeText={(value) => updateField("bio", value)} multiline />
+        <ProfileInput label="Phone" value={form.phone} onChangeText={(value) => updateField("phone", value)} keyboardType="phone-pad" />
+        <ProfileInput label="Location" value={form.location} onChangeText={(value) => updateField("location", value)} />
+        <ProfileInput label="LinkedIn URL" value={form.linkedin_url} onChangeText={(value) => updateField("linkedin_url", value)} autoCapitalize="none" />
+        <ProfileInput label="GitHub username" value={form.github_username} onChangeText={(value) => updateField("github_username", value)} autoCapitalize="none" />
+        <ProfileInput label="Portfolio URL" value={form.portfolio_url} onChangeText={(value) => updateField("portfolio_url", value)} autoCapitalize="none" />
+      </View>
 
       <TouchableOpacity
-        style={[styles.saveButton, isSaving && styles.disabledButton]}
+        style={[ui.primaryButton, styles.saveButton, isSaving && ui.disabled]}
         onPress={handleSave}
         disabled={isSaving}
       >
-        {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Save Profile</Text>}
+        {isSaving ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={ui.primaryButtonText}>Save Profile</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.skillsButton} onPress={() => navigation.navigate("Skills")} disabled={isSaving}>
-        <Text style={styles.skillsButtonText}>Manage Skills</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.resumesButton} onPress={() => navigation.navigate("Resumes")} disabled={isSaving}>
-        <Text style={styles.resumesButtonText}>Manage Resumes</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.certificatesButton} onPress={() => navigation.navigate("Certificates")} disabled={isSaving}>
-        <Text style={styles.certificatesButtonText}>Manage Certificates</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.projectsButton} onPress={() => navigation.navigate("Projects")} disabled={isSaving}>
-        <Text style={styles.projectsButtonText}>Manage Projects</Text>
-      </TouchableOpacity>
-
-      {user.role === "graduate" && (
-        <TouchableOpacity style={styles.publicationsButton} onPress={() => navigation.navigate("Publications")} disabled={isSaving}>
-          <Text style={styles.publicationsButtonText}>Manage Publications</Text>
-        </TouchableOpacity>
-      )}
+      <Text style={styles.sectionTitle}>Skills & portfolio</Text>
+      <View style={styles.portfolioGrid}>
+        <TouchableOpacity style={styles.portfolioCard} onPress={() => navigation.navigate("Skills")} disabled={isSaving}><Text style={styles.portfolioEyebrow}>PROFILE</Text><Text style={styles.portfolioTitle}>Manage Skills</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.portfolioCard} onPress={() => navigation.navigate("Resumes")} disabled={isSaving}><Text style={styles.portfolioEyebrow}>CAREER</Text><Text style={styles.portfolioTitle}>Manage Resumes</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.portfolioCard} onPress={() => navigation.navigate("Certificates")} disabled={isSaving}><Text style={styles.portfolioEyebrow}>CREDENTIALS</Text><Text style={styles.portfolioTitle}>Certificates</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.portfolioCard} onPress={() => navigation.navigate("Projects")} disabled={isSaving}><Text style={styles.portfolioEyebrow}>SHOWCASE</Text><Text style={styles.portfolioTitle}>Projects</Text></TouchableOpacity>
+        {user.role === "graduate" ? <TouchableOpacity style={styles.portfolioCard} onPress={() => navigation.navigate("Publications")} disabled={isSaving}><Text style={styles.portfolioEyebrow}>RESEARCH</Text><Text style={styles.portfolioTitle}>Publications</Text></TouchableOpacity> : null}
+      </View>
 
       {(user.role === "student" || user.role === "graduate") && (
         <View style={styles.githubSection}>
           <Text style={styles.sectionTitle}>GitHub Portfolio</Text>
           {profileData.profile?.github_username ? (
             <>
-              <TouchableOpacity style={[styles.githubButton, isLoadingGitHub && styles.disabledButton]} onPress={() => void loadGitHubPortfolio()} disabled={isLoadingGitHub}>
-                {isLoadingGitHub ? <ActivityIndicator color="#7C3AED" /> : <Text style={styles.githubButtonText}>Load GitHub Portfolio</Text>}
+              <TouchableOpacity style={[styles.githubButton, isLoadingGitHub && ui.disabled]} onPress={() => void loadGitHubPortfolio()} disabled={isLoadingGitHub}>
+                {isLoadingGitHub ? <ActivityIndicator color={colors.secondary} /> : <Text style={styles.githubButtonText}>Load GitHub Portfolio</Text>}
               </TouchableOpacity>
               {githubError ? <Text style={styles.errorText}>{githubError}</Text> : null}
               {githubPortfolio ? <View style={styles.githubCard}>
@@ -283,7 +284,8 @@ function ProfileInput({
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, multiline && styles.multilineInput]}
+        style={[ui.input, styles.input, multiline && styles.multilineInput]}
+        placeholderTextColor={colors.textMuted}
         multiline={multiline}
         textAlignVertical={multiline ? "top" : "center"}
         {...inputProps}
@@ -314,196 +316,133 @@ function ReadOnlySection({
 
 const styles = StyleSheet.create({
   loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: "#fff",
+    ...ui.centered,
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   content: {
-    padding: 24,
+    padding: spacing.xl,
     paddingBottom: 48,
   },
   backButton: {
     alignSelf: "flex-start",
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   backText: {
-    color: "#2563EB",
-    fontWeight: "600",
+    color: colors.primary,
+    fontWeight: "700",
   },
   identitySection: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
+  avatarWrap: { position: "relative", marginBottom: spacing.md },
   profilePicture: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    marginBottom: 12,
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   profilePlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#E6F4FE",
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: colors.surfaceRaised,
+    borderWidth: 2,
+    borderColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
   },
   placeholderText: {
-    color: "#1E3A8A",
+    color: colors.primary,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 28,
+    fontWeight: "800",
   },
+  avatarAffordance: { position: "absolute", right: -8, bottom: -4, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, backgroundColor: colors.secondary, borderWidth: 2, borderColor: colors.background },
+  avatarAffordanceText: { color: colors.onDark, fontSize: 10, fontWeight: "800" },
   name: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#1E3A8A",
+    ...typography.screenTitle,
+    fontSize: 27,
     textAlign: "center",
   },
   details: {
-    fontSize: 15,
-    color: "#666",
+    ...typography.caption,
     marginTop: 4,
   },
+  roleBadge: { marginTop: spacing.sm, borderRadius: radius.pill, backgroundColor: colors.surfaceRaised, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderWidth: 1, borderColor: colors.border },
   role: {
     textTransform: "capitalize",
-    color: "#2563EB",
-    fontWeight: "600",
-    marginTop: 6,
-  },
-  sectionTitle: {
-    fontSize: 20,
+    color: colors.primary,
     fontWeight: "700",
-    color: "#1E3A8A",
-    marginBottom: 14,
   },
+  academicSummary: { ...typography.caption, textAlign: "center", marginTop: spacing.sm },
+  sectionTitle: {
+    ...typography.sectionTitle,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  completionCard: { ...ui.card, backgroundColor: colors.surfaceRaised },
+  completionHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md, marginBottom: spacing.md },
+  cardEyebrow: { color: colors.secondary, fontSize: 11, fontWeight: "800", letterSpacing: 1 },
+  completionTitle: { ...typography.cardTitle, marginTop: spacing.xs },
+  completionPercent: { color: colors.primary, fontSize: 24, fontWeight: "800" },
+  formCard: { ...ui.card },
   inputGroup: {
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   label: {
-    color: "#333",
+    color: colors.textMuted,
     fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 6,
+    fontWeight: "700",
+    marginBottom: spacing.sm,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    color: "#333",
+    ...typography.input,
   },
   multilineInput: {
     minHeight: 96,
   },
   saveButton: {
-    backgroundColor: "#10B981",
-    padding: 16,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
-  skillsButton: {
-    borderWidth: 1.5,
-    borderColor: "#2563EB",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  skillsButtonText: {
-    color: "#2563EB",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  resumesButton: {
-    borderWidth: 1.5,
-    borderColor: "#10B981",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  resumesButtonText: {
-    color: "#047857",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  certificatesButton: {
-    borderWidth: 1.5,
-    borderColor: "#7C3AED",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  certificatesButtonText: {
-    color: "#6D28D9",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  projectsButton: {
-    borderWidth: 1.5,
-    borderColor: "#EA580C",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  projectsButtonText: {
-    color: "#C2410C",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  publicationsButton: {
-    borderWidth: 1.5,
-    borderColor: "#0F766E",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  publicationsButtonText: {
-    color: "#0F766E",
-    fontSize: 17,
-    fontWeight: "600",
-  },
+  portfolioGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
+  portfolioCard: { width: "48%", minHeight: 104, justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.lg },
+  portfolioEyebrow: { color: colors.secondary, fontSize: 10, fontWeight: "800", letterSpacing: 0.9 },
+  portfolioTitle: { ...typography.cardTitle, fontSize: 16 },
   githubSection: {
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
     marginTop: 24,
-    paddingTop: 22,
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   githubButton: {
     borderWidth: 1,
-    borderColor: "#7C3AED",
+    borderColor: colors.secondary,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: radius.md,
     alignItems: "center",
   },
   githubButtonText: {
-    color: "#6D28D9",
+    color: colors.secondary,
     fontSize: 16,
     fontWeight: "600",
   },
   githubHint: {
-    color: "#4B5563",
+    color: colors.textMuted,
     lineHeight: 21,
   },
   githubCard: {
     borderWidth: 1,
-    borderColor: "#DDD6FE",
-    backgroundColor: "#F5F3FF",
-    borderRadius: 10,
-    padding: 15,
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.md,
+    padding: spacing.lg,
     marginTop: 14,
   },
   githubProfileRow: {
@@ -520,64 +459,52 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   githubName: {
-    color: "#312E81",
+    color: colors.text,
     fontSize: 17,
     fontWeight: "700",
   },
   githubHeading: {
-    color: "#312E81",
+    color: colors.text,
     fontWeight: "700",
     marginTop: 16,
   },
   githubDetail: {
-    color: "#4B5563",
+    color: colors.textMuted,
     marginTop: 5,
     lineHeight: 20,
   },
   repositoryRow: {
     borderTopWidth: 1,
-    borderTopColor: "#DDD6FE",
+    borderTopColor: colors.divider,
     marginTop: 10,
     paddingTop: 10,
   },
   repositoryName: {
-    color: "#312E81",
+    color: colors.text,
     fontWeight: "700",
   },
   retryButton: {
-    backgroundColor: "#2563EB",
-    padding: 14,
-    borderRadius: 10,
     marginTop: 12,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    opacity: 0.7,
-  },
   errorText: {
-    color: "#DC2626",
+    color: colors.error,
     textAlign: "center",
     marginBottom: 14,
   },
   readOnlySection: {
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    paddingTop: 22,
+    ...ui.card,
+    marginTop: spacing.xl,
   },
   readOnlyRow: {
     marginBottom: 12,
   },
   readOnlyLabel: {
-    color: "#666",
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: "600",
   },
   readOnlyValue: {
-    color: "#333",
+    color: colors.text,
     fontSize: 16,
     marginTop: 2,
   },

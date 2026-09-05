@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import {
   addMySkill,
   deleteMySkill,
@@ -129,7 +130,7 @@ export default function SkillsScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -138,16 +139,16 @@ export default function SkillsScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadSkills(true)} />}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadSkills(true)} tintColor={colors.primary} />}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} disabled={isSaving}>
         <Text style={styles.backText}>Back to Profile</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>Skills</Text>
-      <Text style={styles.subtitle}>Add and manage the skills shown on your CampusX profile.</Text>
+      <Text style={styles.subtitle}>Shape a clearer picture of the skills powering your career journey.</Text>
 
-      {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+      {!!errorMessage && <View style={styles.errorBox}><Text style={styles.errorText}>{errorMessage}</Text><TouchableOpacity onPress={() => loadSkills()} disabled={isSaving}><Text style={styles.retryText}>Retry</Text></TouchableOpacity></View>}
 
       <View style={styles.addSection}>
         <Text style={styles.sectionTitle}>Add Skill</Text>
@@ -171,7 +172,7 @@ export default function SkillsScreen() {
 
       <Text style={styles.sectionTitle}>My Skills</Text>
       {skills.length === 0 ? (
-        <Text style={styles.emptyText}>No skills added yet.</Text>
+        <View style={styles.emptyState}><Text style={styles.emptyTitle}>No skills added yet</Text><Text style={styles.emptyText}>Add skills to strengthen your profile and recommendations.</Text></View>
       ) : (
         skills.map((skill) => (
           <View key={skill.skill_id} style={styles.skillCard}>
@@ -233,37 +234,12 @@ function ProficiencyPicker({
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 24, paddingBottom: 48 },
-  backButton: { alignSelf: "flex-start", marginBottom: 16 },
-  backText: { color: "#2563EB", fontWeight: "600" },
-  title: { color: "#1E3A8A", fontSize: 30, fontWeight: "bold", marginBottom: 6 },
-  subtitle: { color: "#666", fontSize: 16, marginBottom: 22 },
-  sectionTitle: { color: "#1E3A8A", fontSize: 20, fontWeight: "700", marginBottom: 12 },
-  addSection: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", marginBottom: 24, paddingBottom: 24 },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, fontSize: 16, marginBottom: 14 },
-  label: { color: "#333", fontSize: 15, fontWeight: "600", marginBottom: 8 },
-  levelContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  levelButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  selectedLevel: { backgroundColor: "#2563EB" },
-  levelText: { color: "#2563EB", fontWeight: "600", textTransform: "capitalize" },
-  selectedLevelText: { color: "#fff" },
-  primaryButton: { backgroundColor: "#10B981", padding: 15, borderRadius: 10, alignItems: "center" },
-  smallPrimaryButton: { backgroundColor: "#2563EB", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  primaryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  disabledButton: { opacity: 0.7 },
-  errorText: { color: "#DC2626", textAlign: "center", marginBottom: 14 },
-  emptyText: { color: "#666", fontSize: 16 },
-  skillCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginBottom: 12 },
-  skillName: { color: "#333", fontSize: 18, fontWeight: "700" },
-  proficiency: { color: "#2563EB", fontWeight: "600", textTransform: "capitalize", marginTop: 4 },
-  actionRow: { flexDirection: "row", gap: 10, marginTop: 14 },
-  editSection: { marginTop: 14 },
-  editButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  editButtonText: { color: "#2563EB", fontWeight: "600" },
-  deleteButton: { borderWidth: 1, borderColor: "#DC2626", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  deleteButtonText: { color: "#DC2626", fontWeight: "600" },
-  cancelButton: { borderWidth: 1, borderColor: "#666", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  cancelButtonText: { color: "#666", fontWeight: "600" },
+  loadingContainer: ui.centered, container: ui.screen, content: ui.screenContent, backButton: { alignSelf: "flex-start", marginBottom: spacing.lg }, backText: ui.textButton,
+  title: typography.screenTitle, subtitle: { ...typography.caption, fontSize: 16, marginTop: spacing.xs, marginBottom: spacing.xl }, sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  addSection: { ...ui.card, marginBottom: spacing.xl }, input: { ...ui.input, marginBottom: spacing.md }, label: { color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: spacing.sm },
+  levelContainer: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg }, levelButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.input }, selectedLevel: { backgroundColor: colors.secondary, borderColor: colors.secondary }, levelText: { color: colors.textMuted, fontWeight: "700", textTransform: "capitalize" }, selectedLevelText: { color: colors.onDark },
+  primaryButton: ui.primaryButton, smallPrimaryButton: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, primaryButtonText: ui.primaryButtonText, disabledButton: ui.disabled,
+  errorBox: { ...ui.errorState, ...ui.card, marginBottom: spacing.lg }, errorText: { color: colors.error, textAlign: "center", marginBottom: spacing.sm }, retryText: ui.textButton,
+  emptyState: { ...ui.emptyState, ...ui.card }, emptyTitle: typography.cardTitle, emptyText: typography.caption, skillCard: { ...ui.card, marginBottom: spacing.md }, skillName: typography.cardTitle, proficiency: { alignSelf: "flex-start", color: colors.primary, fontWeight: "700", textTransform: "capitalize", marginTop: spacing.sm, backgroundColor: colors.input, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill },
+  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.lg }, editSection: { marginTop: spacing.lg }, editButton: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, editButtonText: { color: colors.primary, fontWeight: "700" }, deleteButton: { borderWidth: 1, borderColor: colors.error, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, deleteButtonText: { color: colors.error, fontWeight: "700" }, cancelButton: { borderWidth: 1, borderColor: colors.textMuted, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, cancelButtonText: { color: colors.textMuted, fontWeight: "700" },
 });

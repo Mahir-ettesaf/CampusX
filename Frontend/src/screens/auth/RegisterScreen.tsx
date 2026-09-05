@@ -10,6 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import { getApiErrorMessage, registerUser } from "../../services/authservice";
+import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
@@ -69,19 +70,22 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[ui.screen, styles.container]}>
       <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.subtitle}>Join the CampusX career community.</Text>
 
       <TextInput
         placeholder="Full Name"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={fullName}
         onChangeText={setFullName}
       />
 
       <TextInput
         placeholder="Email"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -90,7 +94,8 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Password"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -98,7 +103,8 @@ export default function RegisterScreen() {
 
       <TextInput
         placeholder="Confirm Password"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
@@ -173,11 +179,11 @@ export default function RegisterScreen() {
       {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
       <TouchableOpacity
-        style={[styles.button, isLoading && styles.disabledButton]}
+        style={[ui.primaryButton, styles.button, isLoading && ui.disabled]}
         onPress={handleRegister}
         disabled={isLoading}
       >
-        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
+        {isLoading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={ui.primaryButtonText}>Register</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Login")} disabled={isLoading}>
@@ -190,94 +196,64 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
-
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
+    ...typography.screenTitle,
     textAlign: "center",
-    color: "#1E3A8A",
-    marginBottom: 30,
+    marginBottom: spacing.sm,
   },
-
+  subtitle: { ...typography.caption, textAlign: "center", marginBottom: spacing.xl },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 16,
-    fontSize: 16,
+    marginBottom: spacing.md,
   },
-
   roleTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#333",
+    ...typography.cardTitle,
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
   },
-
   roleContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 25,
+    marginBottom: spacing.lg,
   },
-
   roleButton: {
     width: "48%",
-    borderWidth: 1.5,
-    borderColor: "#2563EB",
-    borderRadius: 10,
-    paddingVertical: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: "center",
     marginBottom: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
-
   selectedRole: {
-    backgroundColor: "#2563EB",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-
   roleText: {
-    color: "#2563EB",
+    color: colors.textMuted,
     fontWeight: "600",
     fontSize: 16,
   },
 
   selectedRoleText: {
-    color: "#fff",
+    color: colors.onPrimary,
   },
-
   button: {
-    backgroundColor: "#10B981",
-    padding: 16,
-    borderRadius: 10,
-    alignItems: "center",
+    marginTop: spacing.xs,
   },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  disabledButton: {
-    opacity: 0.7,
-  },
-
   errorText: {
-    color: "#DC2626",
-    marginBottom: 12,
+    color: colors.error,
+    marginBottom: spacing.md,
     textAlign: "center",
   },
-
   link: {
-    marginTop: 20,
+    marginTop: spacing.lg,
     textAlign: "center",
-    color: "#2563EB",
-    fontWeight: "500",
+    color: colors.primary,
+    fontWeight: "600",
   },
 });

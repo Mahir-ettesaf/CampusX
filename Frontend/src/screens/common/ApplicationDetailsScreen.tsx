@@ -6,6 +6,7 @@ import { clearAuthSession } from "../../services/authservice";
 import { appError, Application, getApplication, unauthorized, withdraw } from "../../services/application.service";
 import { getMyResumes, Resume } from "../../services/resume.service";
 import { getOpportunity, Opportunity } from "../../services/opportunity.service";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 export default function ApplicationDetailsScreen() {
   const navigation = useNavigation<any>();
@@ -61,7 +62,7 @@ export default function ApplicationDetailsScreen() {
   };
 
   if (!application) {
-    return <View style={styles.center}>{error ? <><Text style={styles.error}>{error}</Text><TouchableOpacity onPress={load}><Text style={styles.back}>Retry</Text></TouchableOpacity></> : <ActivityIndicator size="large" color="#2563EB" />}</View>;
+    return <View style={styles.center}>{error ? <><Text style={styles.error}>{error}</Text><TouchableOpacity onPress={load}><Text style={styles.back}>Retry</Text></TouchableOpacity></> : <><ActivityIndicator size="large" color={colors.primary} /><Text style={styles.loadingText}>Loading application details…</Text></>}</View>;
   }
 
   const selectedResume = resumes.find((resume) => resume.id === application.resume_id);
@@ -70,29 +71,42 @@ export default function ApplicationDetailsScreen() {
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>Back to Applications</Text></TouchableOpacity>
-      <Text style={styles.title}>{application.opportunity_title}</Text>
-      <Text style={styles.status}>{application.status}</Text>
+      <View style={styles.heroCard}>
+        <Text style={styles.eyebrow}>APPLICATION TRACKING</Text>
+        <Text style={styles.title}>{application.opportunity_title}</Text>
+        <Text style={[styles.status, application.status === "accepted" && styles.acceptedStatus, application.status === "rejected" && styles.rejectedStatus, application.status === "shortlisted" && styles.shortlistedStatus]}>{application.status}</Text>
+      </View>
       {opportunity ? <>
-        <Text style={styles.label}>Opportunity summary</Text><Text>{opportunity.description}</Text>
-        <Text style={styles.label}>Company</Text><Text>{opportunity.company_name || "Not provided"}</Text>
-        <Text style={styles.label}>Location</Text><Text>{opportunity.is_remote ? "Remote" : opportunity.location || "Not provided"}</Text>
+        <View style={styles.card}><Text style={styles.sectionTitle}>Opportunity overview</Text><Text style={styles.body}>{opportunity.description}</Text><Detail label="Company" value={opportunity.company_name || "Not provided"} /><Detail label="Location" value={opportunity.is_remote ? "Remote" : opportunity.location || "Not provided"} /></View>
       </> : null}
-      <Text style={styles.label}>Submitted</Text><Text>{application.submitted_at.slice(0, 10)}</Text>
-      <Text style={styles.label}>Selected resume</Text><Text>{selectedResume?.title || "No resume selected"}</Text>
-      {application.cover_letter ? <><Text style={styles.label}>Cover letter</Text><Text>{application.cover_letter}</Text></> : null}
+      <View style={styles.card}><Text style={styles.sectionTitle}>Submission details</Text><Detail label="Submitted" value={application.submitted_at.slice(0, 10)} /><Detail label="Selected resume" value={selectedResume?.title || "No resume selected"} /></View>
+      {application.cover_letter ? <View style={styles.card}><Text style={styles.sectionTitle}>Cover letter</Text><Text style={styles.body}>{application.cover_letter}</Text></View> : null}
       {canWithdraw ? <TouchableOpacity style={styles.withdraw} disabled={saving} onPress={() => Alert.alert("Withdraw application?", "This cannot be undone.", [{ text: "Cancel", style: "cancel" }, { text: "Withdraw", style: "destructive", onPress: () => void withdrawApplication() }])}><Text style={styles.withdrawText}>{saving ? "Withdrawing…" : "Withdraw Application"}</Text></TouchableOpacity> : null}
     </ScrollView>
   );
 }
 
+function Detail({ label, value }: { label: string; value: string }) { return <View style={styles.detailRow}><Text style={styles.label}>{label}</Text><Text style={styles.detailValue}>{value}</Text></View>; }
+
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  page: { flex: 1, backgroundColor: "#fff" }, content: { padding: 24 },
-  back: { color: "#2563EB", fontWeight: "600", marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: "bold", color: "#1E3A8A" },
-  status: { color: "#2563EB", fontWeight: "700", textTransform: "capitalize", marginTop: 7 },
-  label: { fontWeight: "700", color: "#333", marginTop: 20, marginBottom: 5 },
-  withdraw: { marginTop: 32, borderWidth: 1, borderColor: "#DC2626", borderRadius: 10, padding: 14, alignItems: "center" },
-  withdrawText: { color: "#DC2626", fontWeight: "700" },
-  error: { color: "#DC2626", textAlign: "center", marginBottom: 12 },
+  center: { ...ui.centered },
+  page: { ...ui.screen }, content: { ...ui.screenContent },
+  back: { color: colors.primary, fontWeight: "700", fontSize: 14, marginBottom: spacing.md },
+  loadingText: { ...typography.caption, marginTop: spacing.md },
+  heroCard: { ...ui.card, backgroundColor: colors.backgroundElevated, marginBottom: spacing.md },
+  eyebrow: { color: colors.primary, fontSize: 10, fontWeight: "800", letterSpacing: 1.15, marginBottom: spacing.sm },
+  title: { ...typography.screenTitle, fontSize: 27, lineHeight: 34 },
+  status: { alignSelf: "flex-start", color: colors.info, backgroundColor: "#103553", fontSize: 12, fontWeight: "800", textTransform: "capitalize", marginTop: spacing.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill, overflow: "hidden" },
+  acceptedStatus: { color: colors.success, backgroundColor: "#123A34" },
+  rejectedStatus: { color: colors.error, backgroundColor: "#3A2028" },
+  shortlistedStatus: { color: colors.secondary, backgroundColor: "#292750" },
+  card: { ...ui.card, marginBottom: spacing.md },
+  sectionTitle: { ...typography.cardTitle, marginBottom: spacing.xs },
+  body: { color: colors.textMuted, fontSize: 15, lineHeight: 22, marginTop: spacing.xs },
+  detailRow: { borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: spacing.md, marginTop: spacing.md },
+  label: { color: colors.text, fontSize: 13, fontWeight: "800", marginBottom: spacing.xs },
+  detailValue: { color: colors.textMuted, fontSize: 15, lineHeight: 21 },
+  withdraw: { marginTop: spacing.xl, borderWidth: 1, borderColor: colors.error, backgroundColor: "#321C2A", borderRadius: radius.md, minHeight: 50, justifyContent: "center", alignItems: "center" },
+  withdrawText: { color: colors.error, fontWeight: "800" },
+  error: { color: colors.error, textAlign: "center", marginBottom: spacing.md },
 });

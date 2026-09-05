@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { clearAuthSession, getStoredAuthSession } from "../../services/authservice";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import {
   CareerReadiness,
   getCareerReadiness,
@@ -58,7 +59,7 @@ export default function CareerReadinessScreen() {
   }, [load]);
 
   if (loading) {
-    return <View style={styles.loading}><ActivityIndicator size="large" color="#2563EB" /></View>;
+    return <View style={styles.loading}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
   if (!readiness) {
@@ -69,12 +70,14 @@ export default function CareerReadinessScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}><Text style={styles.back}>Back to Home</Text></TouchableOpacity>
       <Text style={styles.title}>Career Readiness</Text>
+      <Text style={styles.subtitle}>Track the profile signals supporting your next career step.</Text>
       <View style={styles.scoreCard}>
-        <Text style={styles.score}>{readiness.career_readiness.score} / 100</Text>
+        <ReadinessRing score={readiness.career_readiness.score} />
+        <Text style={styles.scoreLabel}>Career Readiness</Text>
         <Text style={styles.level}>{readiness.career_readiness.level}</Text>
       </View>
 
@@ -94,26 +97,23 @@ export default function CareerReadinessScreen() {
   );
 }
 
+function ReadinessRing({ score }: { score: number }) {
+  const safeScore = Math.max(0, Math.min(100, score));
+  const activeSegments = Math.round(safeScore);
+  const size = 142;
+  const center = size / 2;
+  const radiusValue = 61;
+  return <View style={styles.ring}>{Array.from({ length: 100 }, (_, index) => {
+    const angle = ((index / 100) * 360 - 90) * (Math.PI / 180);
+    return <View key={index} style={[styles.ringSegment, { left: center + Math.cos(angle) * radiusValue - 2, top: center + Math.sin(angle) * radiusValue - 4, transform: [{ rotate: `${index * 3.6}deg` }] }, index < activeSegments ? styles.activeSegment : styles.inactiveSegment]} />;
+  })}<View style={styles.ringCenter}><Text style={styles.ringScore}>{safeScore}</Text><Text style={styles.outOf}>/100</Text></View></View>;
+}
+
 const styles = StyleSheet.create({
-  loading: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#fff" },
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 24, paddingBottom: 48 },
-  backButton: { alignSelf: "flex-start", marginBottom: 16 },
-  back: { color: "#2563EB", fontWeight: "600", marginTop: 12 },
-  title: { color: "#1E3A8A", fontSize: 30, fontWeight: "bold", marginBottom: 16 },
-  scoreCard: { padding: 22, borderRadius: 12, backgroundColor: "#EFF6FF", borderWidth: 1, borderColor: "#BFDBFE", alignItems: "center" },
-  score: { color: "#1E3A8A", fontSize: 34, fontWeight: "bold" },
-  level: { color: "#166534", fontSize: 18, fontWeight: "700", marginTop: 8 },
-  sectionTitle: { color: "#1E3A8A", fontSize: 21, fontWeight: "700", marginTop: 28, marginBottom: 12 },
-  breakdownCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginBottom: 10 },
-  category: { color: "#333", fontSize: 18, fontWeight: "700" },
-  points: { color: "#2563EB", fontWeight: "600", marginTop: 8 },
-  percentage: { color: "#4B5563", marginTop: 4 },
-  notApplicable: { color: "#4B5563", marginTop: 8 },
-  improvement: { backgroundColor: "#F0FDF4", borderRadius: 8, padding: 13, marginBottom: 8 },
-  improvementText: { color: "#166534", lineHeight: 21 },
-  empty: { color: "#4B5563", lineHeight: 22 },
-  errorBox: { marginTop: 20, alignItems: "center" },
-  error: { color: "#DC2626", textAlign: "center", lineHeight: 21 },
-  retry: { color: "#2563EB", fontWeight: "700", marginTop: 10 },
+  loading: ui.centered, container: ui.screen, content: ui.screenContent,
+  backButton: { alignSelf: "flex-start", marginBottom: spacing.lg }, back: { ...ui.textButton, marginTop: spacing.sm }, title: typography.screenTitle, subtitle: { ...typography.caption, fontSize: 16, marginTop: spacing.xs, marginBottom: spacing.xl },
+  scoreCard: { ...ui.card, alignItems: "center", paddingVertical: spacing.xl }, ring: { width: 142, height: 142, position: "relative", justifyContent: "center", alignItems: "center", marginBottom: spacing.md }, ringSegment: { position: "absolute", width: 4, height: 10, borderRadius: radius.pill }, activeSegment: { backgroundColor: colors.primary }, inactiveSegment: { backgroundColor: colors.divider }, ringCenter: { alignItems: "center" }, ringScore: { color: colors.text, fontSize: 38, fontWeight: "800", lineHeight: 42 }, outOf: { ...typography.caption, marginTop: -1 },
+  scoreLabel: { ...typography.cardTitle, marginTop: spacing.xs }, level: { color: colors.success, fontSize: 16, fontWeight: "700", marginTop: spacing.xs },
+  sectionTitle: { ...typography.sectionTitle, marginTop: spacing.xl, marginBottom: spacing.md }, breakdownCard: { ...ui.card, marginBottom: spacing.sm }, category: typography.cardTitle, points: { color: colors.primary, fontWeight: "700", marginTop: spacing.sm }, percentage: { ...typography.caption, marginTop: spacing.xs }, notApplicable: { ...typography.caption, marginTop: spacing.sm },
+  improvement: { backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm }, improvementText: { color: colors.text, lineHeight: 21 }, empty: { ...typography.caption, lineHeight: 22 }, errorBox: { ...ui.errorState, ...ui.card, marginTop: spacing.xl }, error: { color: colors.error, textAlign: "center", lineHeight: 21 }, retry: { ...ui.textButton, marginTop: spacing.sm },
 });

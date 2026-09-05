@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import { clearAuthSession } from "../../services/authservice";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import {
   createMyProject,
   deleteMyProject,
@@ -197,13 +198,13 @@ export default function ProjectsScreen() {
     }
   };
 
-  if (isLoading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2563EB" /></View>;
+  if (isLoading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadProjects(true)} />}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadProjects(true)} tintColor={colors.primary} />}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} disabled={isSaving}><Text style={styles.backText}>Back to Profile</Text></TouchableOpacity>
       <Text style={styles.title}>Projects</Text>
-      <Text style={styles.subtitle}>Add academic, professional, and personal projects to your CampusX profile.</Text>
+      <Text style={styles.subtitle}>Build a portfolio of academic, professional, and personal work.</Text>
 
       {!!errorMessage && <View style={styles.errorSection}><Text style={styles.errorText}>{errorMessage}</Text><TouchableOpacity style={styles.retryButton} onPress={() => loadProjects()} disabled={isSaving}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity></View>}
 
@@ -254,13 +255,12 @@ function ProjectTypePicker({ selected, onSelect, disabled }: { selected: Project
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#fff" },
-  container: { flex: 1, backgroundColor: "#fff" }, content: { padding: 24, paddingBottom: 48 }, backButton: { alignSelf: "flex-start", marginBottom: 16 }, backText: { color: "#2563EB", fontWeight: "600" },
-  title: { color: "#1E3A8A", fontSize: 30, fontWeight: "bold", marginBottom: 6 }, subtitle: { color: "#666", fontSize: 16, marginBottom: 22 }, sectionTitle: { color: "#1E3A8A", fontSize: 20, fontWeight: "700", marginBottom: 12 },
-  formSection: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", marginBottom: 24, paddingBottom: 24 }, inputGroup: { marginBottom: 14 }, label: { color: "#333", fontSize: 15, fontWeight: "600", marginBottom: 6 }, input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, fontSize: 16, color: "#333" }, multilineInput: { minHeight: 96 },
-  typePicker: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }, typeOption: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9 }, selectedTypeOption: { backgroundColor: "#2563EB" }, typeOptionText: { color: "#2563EB", fontWeight: "600", textTransform: "capitalize" }, selectedTypeOptionText: { color: "#fff" },
-  primaryButton: { backgroundColor: "#10B981", padding: 15, borderRadius: 10, alignItems: "center" }, primaryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 }, cancelButton: { borderWidth: 1, borderColor: "#666", borderRadius: 10, padding: 13, alignItems: "center", marginTop: 10 }, cancelButtonText: { color: "#666", fontWeight: "600" }, disabledButton: { opacity: 0.7 },
-  errorSection: { alignItems: "center", marginBottom: 14 }, errorText: { color: "#DC2626", textAlign: "center", marginBottom: 10 }, retryButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 }, retryButtonText: { color: "#2563EB", fontWeight: "600" },
-  emptyState: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 18 }, emptyTitle: { color: "#333", fontSize: 18, fontWeight: "700", marginBottom: 6 }, emptyText: { color: "#666", fontSize: 16, lineHeight: 22 }, projectCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginBottom: 12 },
-  projectTitle: { color: "#333", fontSize: 18, fontWeight: "700" }, projectType: { color: "#2563EB", fontWeight: "600", textTransform: "capitalize", marginTop: 4 }, description: { color: "#4B5563", fontSize: 15, lineHeight: 21, marginTop: 10 }, details: { color: "#4B5563", fontSize: 14, marginTop: 8 }, linkText: { color: "#2563EB", fontSize: 14, marginTop: 8 }, actionRow: { flexDirection: "row", gap: 10, marginTop: 14 }, editButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 }, editButtonText: { color: "#2563EB", fontWeight: "600" }, deleteButton: { borderWidth: 1, borderColor: "#DC2626", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 }, deleteButtonText: { color: "#DC2626", fontWeight: "600" },
+  loadingContainer: ui.centered, container: ui.screen, content: ui.screenContent, backButton: { alignSelf: "flex-start", marginBottom: spacing.lg }, backText: ui.textButton,
+  title: typography.screenTitle, subtitle: { ...typography.caption, fontSize: 16, marginTop: spacing.xs, marginBottom: spacing.xl }, sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  formSection: { ...ui.card, marginBottom: spacing.xl }, inputGroup: { marginBottom: spacing.md }, label: { color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: spacing.sm }, input: ui.input, multilineInput: { minHeight: 104 },
+  typePicker: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg }, typeOption: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.input }, selectedTypeOption: { backgroundColor: colors.secondary, borderColor: colors.secondary }, typeOptionText: { color: colors.textMuted, fontWeight: "700", textTransform: "capitalize" }, selectedTypeOptionText: { color: colors.onDark },
+  primaryButton: ui.primaryButton, primaryButtonText: ui.primaryButtonText, cancelButton: { ...ui.outlineButton, marginTop: spacing.sm, borderColor: colors.textMuted }, cancelButtonText: { ...ui.outlineButtonText, color: colors.textMuted }, disabledButton: ui.disabled,
+  errorSection: { ...ui.errorState, ...ui.card, marginBottom: spacing.lg }, errorText: { color: colors.error, textAlign: "center", marginBottom: spacing.sm }, retryButton: ui.outlineButton, retryButtonText: ui.outlineButtonText,
+  emptyState: { ...ui.emptyState, ...ui.card }, emptyTitle: typography.cardTitle, emptyText: typography.caption, projectCard: { ...ui.card, marginBottom: spacing.md }, projectTitle: typography.cardTitle, projectType: { alignSelf: "flex-start", color: colors.primary, fontWeight: "700", textTransform: "capitalize", marginTop: spacing.sm, backgroundColor: colors.input, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill },
+  description: { ...typography.body, color: colors.textMuted, marginTop: spacing.md }, details: { ...typography.caption, marginTop: spacing.sm }, linkText: { color: colors.primary, fontSize: 14, marginTop: spacing.sm }, actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.lg }, editButton: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, editButtonText: { color: colors.primary, fontWeight: "700" }, deleteButton: { borderWidth: 1, borderColor: colors.error, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10 }, deleteButtonText: { color: colors.error, fontWeight: "700" },
 });

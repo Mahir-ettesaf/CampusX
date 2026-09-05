@@ -1,5 +1,5 @@
 import Toast from "react-native-toast-message";
-import { NavigationContainer } from "@react-navigation/native";
+import { createNavigationContainerRef, DarkTheme, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import SplashScreen from "../screens/common/SplashScreen";
@@ -81,13 +81,17 @@ import RecruiterAnnouncementsScreen from "../screens/recruiter/RecruiterAnnounce
 import RecruiterAnnouncementDetailsScreen from "../screens/recruiter/RecruiterAnnouncementDetailsScreen";
 import SkillMatchScreen from "../screens/common/SkillMatchScreen";
 import RecommendationsScreen from "../screens/common/RecommendationsScreen";
+import { navigationColors } from "../theme/CampusXTheme";
+import { CampusXDrawerProvider } from "../components/CampusXDrawer";
 
 const Stack = createNativeStackNavigator();
+const navigationRef = createNavigationContainerRef<any>();
 
 export default function AppNavigator() {
   return (
     <>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, ...navigationColors } }}>
+        <CampusXDrawerProvider navigationRef={navigationRef}>
         <Stack.Navigator
           initialRouteName="Splash"
           screenOptions={{
@@ -174,6 +178,7 @@ export default function AppNavigator() {
           <Stack.Screen name="SkillMatch" component={SkillMatchScreen} />
           <Stack.Screen name="Recommendations" component={RecommendationsScreen} />
         </Stack.Navigator>
+        </CampusXDrawerProvider>
       </NavigationContainer>
 
       <Toast />

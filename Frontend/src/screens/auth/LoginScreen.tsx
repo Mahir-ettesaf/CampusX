@@ -14,6 +14,7 @@ import {
   loginUser,
   saveAuthSession,
 } from "../../services/authservice";
+import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -53,12 +54,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[ui.screen, styles.container]}>
       <Text style={styles.title}>Login</Text>
+      <Text style={styles.subtitle}>Welcome back. Continue building your future.</Text>
 
       <TextInput
         placeholder="Email"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -66,18 +69,19 @@ export default function LoginScreen() {
 
       <TextInput
         placeholder="Password"
-        style={styles.input}
+        placeholderTextColor={colors.textMuted}
+        style={[ui.input, styles.input]}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
       <TouchableOpacity
-        style={[styles.button, isLoading && styles.disabledButton]}
+        style={[ui.primaryButton, styles.button, isLoading && ui.disabled]}
         onPress={handleLogin}
         disabled={isLoading}
       >
-        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+        {isLoading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={ui.primaryButtonText}>Login</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Register")} disabled={isLoading}>
@@ -91,49 +95,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#fff",
+    padding: spacing.xl,
   },
-
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 30,
+    ...typography.screenTitle,
+    marginBottom: spacing.sm,
     textAlign: "center",
-    color: "#1E3A8A",
   },
-
+  subtitle: { ...typography.caption, textAlign: "center", marginBottom: spacing.xxl },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 18,
-    fontSize: 16,
+    marginBottom: spacing.lg,
   },
-
   button: {
-    backgroundColor: "#2563EB",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
+    marginTop: spacing.sm,
   },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  disabledButton: {
-    opacity: 0.7,
-  },
-
   link: {
-    marginTop: 20,
+    marginTop: spacing.xl,
     textAlign: "center",
-    color: "#2563EB",
-    fontWeight: "500",
+    color: colors.primary,
+    fontWeight: "600",
   },
 });

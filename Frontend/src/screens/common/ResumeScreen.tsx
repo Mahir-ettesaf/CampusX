@@ -27,6 +27,7 @@ import {
   uploadMyResumeDocument,
   updateMyResume,
 } from "../../services/resume.service";
+import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 
 type ResumeForm = {
   title: string;
@@ -286,7 +287,7 @@ export default function ResumeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -302,8 +303,8 @@ export default function ResumeScreen() {
         <Text style={styles.backText}>Back to Profile</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Resumes</Text>
-      <Text style={styles.subtitle}>Create and manage the resumes on your CampusX profile.</Text>
+      <Text style={styles.title}>My Resumes</Text>
+      <Text style={styles.subtitle}>Keep your career documents ready for every opportunity.</Text>
 
       {!!errorMessage && (
         <View style={styles.errorSection}>
@@ -418,58 +419,58 @@ function PrimaryPicker({ selected, onSelect, disabled }: { selected: boolean; on
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#fff" },
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 24, paddingBottom: 48 },
-  backButton: { alignSelf: "flex-start", marginBottom: 16 },
-  backText: { color: "#2563EB", fontWeight: "600" },
-  title: { color: "#1E3A8A", fontSize: 30, fontWeight: "bold", marginBottom: 6 },
-  subtitle: { color: "#666", fontSize: 16, marginBottom: 22 },
-  sectionTitle: { color: "#1E3A8A", fontSize: 20, fontWeight: "700", marginBottom: 12 },
-  formSection: { borderBottomWidth: 1, borderBottomColor: "#E5E7EB", marginBottom: 24, paddingBottom: 24 },
-  inputGroup: { marginBottom: 14 },
-  label: { color: "#333", fontSize: 15, fontWeight: "600", marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12, fontSize: 16, color: "#333" },
-  multilineInput: { minHeight: 96 },
-  primaryPicker: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  primaryOption: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9 },
-  selectedPrimaryOption: { backgroundColor: "#2563EB" },
-  primaryOptionText: { color: "#2563EB", fontWeight: "600" },
-  selectedPrimaryOptionText: { color: "#fff" },
-  primaryButton: { backgroundColor: "#10B981", padding: 15, borderRadius: 10, alignItems: "center" },
-  primaryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  cancelButton: { borderWidth: 1, borderColor: "#666", borderRadius: 10, padding: 13, alignItems: "center", marginTop: 10 },
-  cancelButtonText: { color: "#666", fontWeight: "600" },
-  disabledButton: { opacity: 0.7 },
-  errorSection: { alignItems: "center", marginBottom: 14 },
-  errorText: { color: "#DC2626", textAlign: "center", marginBottom: 10 },
-  retryButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  retryButtonText: { color: "#2563EB", fontWeight: "600" },
-  emptyState: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 18 },
-  emptyTitle: { color: "#333", fontSize: 18, fontWeight: "700", marginBottom: 6 },
-  emptyText: { color: "#666", fontSize: 16, lineHeight: 22 },
-  resumeCard: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 10, padding: 16, marginBottom: 12 },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
-  resumeTitle: { color: "#333", fontSize: 18, fontWeight: "700", flex: 1 },
-  primaryBadge: { color: "#047857", backgroundColor: "#D1FAE5", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, fontSize: 12, fontWeight: "700" },
-  summary: { color: "#4B5563", fontSize: 15, lineHeight: 21, marginTop: 10 },
-  fileUrl: { color: "#2563EB", fontSize: 14, marginTop: 10 },
-  secondaryLabel: { color: "#666", fontSize: 14, marginTop: 8 },
-  uploadButton: { borderWidth: 1, borderColor: "#0F766E", borderRadius: 8, padding: 11, alignItems: "center", marginTop: 14 },
-  uploadButtonText: { color: "#0F766E", fontWeight: "600" },
-  aiButton: { borderWidth: 1, borderColor: "#7C3AED", borderRadius: 8, padding: 11, alignItems: "center", marginTop: 14 },
-  aiButtonText: { color: "#6D28D9", fontWeight: "600" },
-  reviewError: { color: "#DC2626", lineHeight: 20, marginTop: 10 },
-  reviewToggle: { color: "#6D28D9", fontWeight: "600", marginTop: 12 },
-  reviewCard: { backgroundColor: "#F5F3FF", borderColor: "#DDD6FE", borderWidth: 1, borderRadius: 8, padding: 13, marginTop: 10 },
-  reviewHeading: { color: "#312E81", fontSize: 16, fontWeight: "700" },
-  reviewSection: { marginTop: 12 },
-  reviewSectionTitle: { color: "#312E81", fontWeight: "700", marginBottom: 3 },
-  reviewText: { color: "#4B5563", lineHeight: 20 },
-  reviewDisclaimer: { color: "#6B7280", fontSize: 12, fontStyle: "italic", lineHeight: 18, marginTop: 14 },
-  actionRow: { flexDirection: "row", gap: 10, marginTop: 14 },
-  editButton: { borderWidth: 1, borderColor: "#2563EB", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  editButtonText: { color: "#2563EB", fontWeight: "600" },
-  deleteButton: { borderWidth: 1, borderColor: "#DC2626", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  deleteButtonText: { color: "#DC2626", fontWeight: "600" },
+  loadingContainer: { ...ui.centered },
+  container: { ...ui.screen },
+  content: { ...ui.screenContent },
+  backButton: { alignSelf: "flex-start", marginBottom: spacing.md },
+  backText: { color: colors.primary, fontWeight: "700", fontSize: 14 },
+  title: { ...typography.screenTitle, marginBottom: spacing.xs },
+  subtitle: { ...typography.caption, marginBottom: spacing.xl },
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  formSection: { ...ui.card, marginBottom: spacing.xl },
+  inputGroup: { marginBottom: spacing.md },
+  label: { color: colors.text, fontSize: 14, fontWeight: "700", marginBottom: spacing.xs },
+  input: { ...ui.input, fontSize: 16 },
+  multilineInput: { minHeight: 104 },
+  primaryPicker: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg },
+  primaryOption: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.input },
+  selectedPrimaryOption: { backgroundColor: colors.primary, borderColor: colors.primary },
+  primaryOptionText: { color: colors.textMuted, fontWeight: "700" },
+  selectedPrimaryOptionText: { color: colors.onPrimary },
+  primaryButton: { ...ui.primaryButton },
+  primaryButtonText: { ...ui.primaryButtonText },
+  cancelButton: { ...ui.outlineButton, minHeight: 46, marginTop: spacing.sm, borderColor: colors.textMuted },
+  cancelButtonText: { color: colors.textMuted, fontWeight: "700" },
+  disabledButton: { ...ui.disabled },
+  errorSection: { ...ui.errorState, marginBottom: spacing.md, backgroundColor: "#321C2A", borderWidth: 1, borderColor: "#5A2D38", borderRadius: radius.md },
+  errorText: { color: colors.error, textAlign: "center", marginBottom: spacing.sm },
+  retryButton: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  retryButtonText: { color: colors.primary, fontWeight: "800" },
+  emptyState: { ...ui.card, alignItems: "center" },
+  emptyTitle: { ...typography.cardTitle, marginBottom: spacing.xs },
+  emptyText: { ...typography.caption, textAlign: "center" },
+  resumeCard: { ...ui.card, marginBottom: spacing.md },
+  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md },
+  resumeTitle: { ...typography.cardTitle, flex: 1 },
+  primaryBadge: { color: colors.success, backgroundColor: "#123A34", paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill, fontSize: 11, fontWeight: "800", overflow: "hidden" },
+  summary: { color: colors.textMuted, fontSize: 15, lineHeight: 22, marginTop: spacing.md },
+  fileUrl: { color: colors.primary, fontSize: 13, marginTop: spacing.md },
+  secondaryLabel: { color: colors.textMuted, fontSize: 13, marginTop: spacing.sm },
+  uploadButton: { borderWidth: 1, borderColor: colors.primary, backgroundColor: "#102E4B", borderRadius: radius.md, minHeight: 46, justifyContent: "center", alignItems: "center", marginTop: spacing.lg, paddingHorizontal: spacing.md },
+  uploadButtonText: { color: colors.primary, fontWeight: "800" },
+  aiButton: { borderWidth: 1, borderColor: colors.secondary, backgroundColor: "#242148", borderRadius: radius.md, minHeight: 46, justifyContent: "center", alignItems: "center", marginTop: spacing.sm, paddingHorizontal: spacing.md },
+  aiButtonText: { color: colors.secondary, fontWeight: "800" },
+  reviewError: { color: colors.error, lineHeight: 20, marginTop: spacing.sm },
+  reviewToggle: { color: colors.secondary, fontWeight: "800", marginTop: spacing.md },
+  reviewCard: { backgroundColor: colors.surfaceRaised, borderColor: "#4A4384", borderWidth: 1, borderRadius: radius.md, padding: spacing.md, marginTop: spacing.md },
+  reviewHeading: { color: colors.secondary, fontSize: 16, fontWeight: "800" },
+  reviewSection: { marginTop: spacing.md },
+  reviewSectionTitle: { color: colors.text, fontWeight: "800", marginBottom: spacing.xs },
+  reviewText: { color: colors.textMuted, lineHeight: 20 },
+  reviewDisclaimer: { color: colors.textMuted, fontSize: 12, fontStyle: "italic", lineHeight: 18, marginTop: spacing.lg },
+  actionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.lg },
+  editButton: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  editButtonText: { color: colors.primary, fontWeight: "800" },
+  deleteButton: { borderWidth: 1, borderColor: colors.error, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  deleteButtonText: { color: colors.error, fontWeight: "800" },
 });
