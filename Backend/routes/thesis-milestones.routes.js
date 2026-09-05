@@ -1,0 +1,2 @@
+import express from "express"; import { authenticateToken } from "../middleware/auth.middleware.js"; import { createMyMilestone, deleteMyMilestone, listMyMilestones, updateMyMilestone } from "../controllers/thesis-milestone.controllers.js";
+const router=express.Router(); router.use(authenticateToken); router.get("/",listMyMilestones); router.post("/",createMyMilestone); router.put("/:milestoneId",updateMyMilestone); router.delete("/:milestoneId",deleteMyMilestone); export default router;

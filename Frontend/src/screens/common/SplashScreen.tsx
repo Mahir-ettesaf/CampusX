@@ -1,16 +1,26 @@
 import { View, Text } from "react-native";
 import { useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { getStoredAuthSession } from "../../services/authservice";
 
 export default function SplashScreen() {
   const navigation = useNavigation<any>();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace("Welcome");
-    }, 2000);
+    const restoreSession = async () => {
+      try {
+        const session = await getStoredAuthSession();
 
-    return () => clearTimeout(timer);
+        navigation.replace(
+          session ? "Authenticated" : "Welcome",
+          session ? { user: session.user } : undefined,
+        );
+      } catch {
+        navigation.replace("Welcome");
+      }
+    };
+
+    restoreSession();
   }, []);
 
   return (

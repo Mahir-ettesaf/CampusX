@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { createUser, findUserByEmail } from "../models/user.model.js";
+import { createEmailToken, findEmailUser, updatePassword, useEmailToken, verifyUser } from "../models/email-token.model.js";
+import { sendEmail } from "../services/email.service.js";
 
 const PUBLIC_REGISTRATION_ROLES = new Set(["student", "graduate", "faculty", "recruiter"]);
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
@@ -80,6 +82,7 @@ export const login = async (req, res) => {
         success: false,
         message: "Email and password are required",
       });
+      createEmailToken(result.insertId, "verification").then((token) => sendEmail({ to: normalizedEmail, subject: "Verify your CampusX account", text: `Verify your account: ${process.env.FRONTEND_URL || "campusx://"}/verify?token=${token}` })).catch(() => undefined);
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -160,3 +163,7 @@ export const getCurrentUser = (req, res) => {
     user: req.user,
   });
 };
+const emailValid=(email)=>typeof email==="string"&&isValidEmail(email.trim().toLowerCase());
+export const requestPasswordReset=async(req,res)=>{if(!emailValid(req.body?.email))return res.status(400).json({success:false,message:"Please provide a valid email address"});try{const user=await findEmailUser(req.body.email.trim().toLowerCase());if(user){const token=await createEmailToken(user.id,"password_reset");await sendEmail({to:user.email,subject:"Reset your CampusX password",text:`Reset your password: ${process.env.FRONTEND_URL||"campusx://"}/reset-password?token=${token}`});}return res.json({success:true,message:"If an account exists, a password reset email has been sent."});}catch(error){return res.status(error.status||500).json({success:false,message:error.status===503?"Email service is not configured yet.":"Unable to send password reset email"});}};
+export const resetPassword=async(req,res)=>{const {token,password}=req.body||{};if(typeof token!=="string"||token.length<32||typeof password!=="string"||password.length<8)return res.status(400).json({success:false,message:"Provide a valid reset token and a password of at least 8 characters"});try{const userId=await useEmailToken(token,"password_reset");if(!userId)return res.status(400).json({success:false,message:"This reset link is invalid or expired"});await updatePassword(userId,await bcrypt.hash(password,10));return res.json({success:true,message:"Password updated successfully"});}catch{return res.status(500).json({success:false,message:"Unable to reset password"});}};
+export const verifyAccount=async(req,res)=>{const token=req.body?.token;if(typeof token!=="string"||token.length<32)return res.status(400).json({success:false,message:"Provide a valid verification token"});try{const userId=await useEmailToken(token,"verification");if(!userId)return res.status(400).json({success:false,message:"This verification link is invalid or expired"});await verifyUser(userId);return res.json({success:true,message:"Account verified successfully"});}catch{return res.status(500).json({success:false,message:"Unable to verify account"});}};

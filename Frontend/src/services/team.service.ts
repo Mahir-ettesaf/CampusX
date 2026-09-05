@@ -1,0 +1,30 @@
+import axios from "axios";
+import API_BASE_URL from "../config/api";
+import { getStoredAuthSession } from "./authservice";
+
+export type TeamTaskStatus = "todo" | "in_progress" | "completed" | "cancelled";
+export type TeamTaskPriority = "low" | "medium" | "high";
+export type Team = { id:number; name:string; description:string|null; creator_name:string; created_at:string; updated_at:string; progress_percentage:number; member_count:number; task_count:number };
+export type TeamMember = { user_id:number; full_name:string; role:string; membership_role:"owner"|"member"; joined_at:string };
+export type TeamTask = { id:number; team_id:number; title:string; description:string|null; assigned_to:number|null; status:TeamTaskStatus; priority:TeamTaskPriority; due_at:string|null; created_at:string; updated_at:string; assignee_name:string|null; creator_name:string };
+export type TeamDetails = { team:Team; members:TeamMember[]; tasks:TeamTask[] };
+export type TeamInput = { name:string; description:string|null };
+export type TeamTaskInput = { title:string; description:string|null; assigned_to:number|null; status?:TeamTaskStatus; priority:TeamTaskPriority; due_at:string|null };
+export type TeamTaskUpdate = Partial<TeamTaskInput>;
+
+const authenticatedConfig = async () => { const session = await getStoredAuthSession(); if (!session) throw new Error("Your session has expired. Please log in again."); return { headers:{ Authorization:`Bearer ${session.token}` }, timeout:10000 }; };
+export const getTeams = async () => (await axios.get<{ teams:Team[] }>(`${API_BASE_URL}/teams`, await authenticatedConfig())).data.teams;
+export const getTeamById = async (teamId:number) => (await axios.get<TeamDetails>(`${API_BASE_URL}/teams/${teamId}`, await authenticatedConfig())).data;
+export const createTeam = async (data:TeamInput) => (await axios.post<{ team:Team }>(`${API_BASE_URL}/teams`, data, await authenticatedConfig())).data.team;
+export const updateTeam = async (teamId:number, data:Partial<TeamInput>) => (await axios.put<{ team:Team }>(`${API_BASE_URL}/teams/${teamId}`, data, await authenticatedConfig())).data.team;
+export const deleteTeam = async (teamId:number) => { await axios.delete(`${API_BASE_URL}/teams/${teamId}`, await authenticatedConfig()); };
+export const getTeamMembers = async (teamId:number) => (await axios.get<{ members:TeamMember[] }>(`${API_BASE_URL}/teams/${teamId}/members`, await authenticatedConfig())).data.members;
+export const addTeamMember = async (teamId:number, userId:number) => (await axios.post(`${API_BASE_URL}/teams/${teamId}/members`, { user_id:userId }, await authenticatedConfig())).data;
+export const removeTeamMember = async (teamId:number, userId:number) => { await axios.delete(`${API_BASE_URL}/teams/${teamId}/members/${userId}`, await authenticatedConfig()); };
+export const leaveTeam = async (teamId:number) => { await axios.delete(`${API_BASE_URL}/teams/${teamId}/members/me`, await authenticatedConfig()); };
+export const getTeamTasks = async (teamId:number) => (await axios.get<{ tasks:TeamTask[] }>(`${API_BASE_URL}/teams/${teamId}/tasks`, await authenticatedConfig())).data.tasks;
+export const createTeamTask = async (teamId:number, data:TeamTaskInput) => (await axios.post<{ task:TeamTask }>(`${API_BASE_URL}/teams/${teamId}/tasks`, data, await authenticatedConfig())).data.task;
+export const updateTeamTask = async (teamId:number, taskId:number, data:TeamTaskUpdate) => (await axios.put<{ task:TeamTask }>(`${API_BASE_URL}/teams/${teamId}/tasks/${taskId}`, data, await authenticatedConfig())).data.task;
+export const deleteTeamTask = async (teamId:number, taskId:number) => { await axios.delete(`${API_BASE_URL}/teams/${teamId}/tasks/${taskId}`, await authenticatedConfig()); };
+export const isUnauthorizedTeamError = (error:unknown) => axios.isAxiosError(error) && error.response?.status === 401;
+export const getTeamErrorMessage = (error:unknown) => { if (axios.isAxiosError(error)) { if (error.response?.status === 401) return "Your session has expired. Please log in again."; if (error.response?.status === 403) return "You do not have permission to perform this team action."; if (error.response?.status === 404) return "This team or team item could not be found."; if (error.response?.status === 409) return error.response.data?.message || "This team member or item already exists."; if (error.code === "ECONNABORTED") return "The request timed out. Please check your connection and try again."; return error.response?.data?.message || "Unable to process the team request."; } return error instanceof Error ? error.message : "Unable to process the team request."; };

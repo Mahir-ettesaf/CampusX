@@ -1,0 +1,6 @@
+import crypto from "crypto"; import db from "../config/db.js";
+const q=(sql,v=[])=>new Promise((resolve,reject)=>db.query(sql,v,(e,r)=>e?reject(e):resolve(r))); const hash=t=>crypto.createHash("sha256").update(t).digest("hex");
+export const createEmailToken=async(userId,type)=>{const token=crypto.randomBytes(32).toString("hex");await q("UPDATE email_tokens SET used_at=NOW() WHERE user_id=? AND token_type=? AND used_at IS NULL",[userId,type]);await q("INSERT INTO email_tokens (user_id,token_hash,token_type,expires_at) VALUES (?,?,?,DATE_ADD(NOW(),INTERVAL 1 HOUR))",[userId,hash(token),type]);return token;};
+export const useEmailToken=async(token,type)=>{const rows=await q("SELECT id,user_id FROM email_tokens WHERE token_hash=? AND token_type=? AND used_at IS NULL AND expires_at>NOW()",[hash(token),type]);if(!rows[0])return null;await q("UPDATE email_tokens SET used_at=NOW() WHERE id=? AND used_at IS NULL",[rows[0].id]);return rows[0].user_id;};
+export const findEmailUser=async(email)=> (await q("SELECT id,email FROM users WHERE email=?",[email]))[0]||null;
+export const verifyUser=(id)=>q("UPDATE users SET is_verified=1 WHERE id=?",[id]); export const updatePassword=(id,password)=>q("UPDATE users SET password=? WHERE id=?",[password,id]);

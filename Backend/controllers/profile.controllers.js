@@ -10,6 +10,7 @@ import {
   upsertFacultyProfile,
   upsertRecruiterProfile,
 } from "../models/profile.model.js";
+import { GitHubApiError, getPublicGitHubPortfolio } from "../services/github.service.js";
 
 const COMMON_PROFILE_FIELDS = [
   "headline",
@@ -65,6 +66,33 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     console.error("Profile fetch failed:", error?.code || error?.message || error);
     return respondInternalError(res);
+  }
+};
+
+export const getGitHubPortfolio = async (req, res) => {
+  if (req.user.role !== "student" && req.user.role !== "graduate") {
+    return res.status(403).json({ success: false, message: "GitHub portfolio is available to students and graduates only" });
+  }
+
+  try {
+    const profile = await findCommonProfile(req.user.id);
+    const username = profile?.github_username?.trim();
+    if (!username) {
+      return res.status(400).json({ success: false, message: "Add a GitHub username to your profile before loading your portfolio" });
+    }
+    if (!/^[A-Za-z\d](?:[A-Za-z\d]|-(?=[A-Za-z\d])){0,38}$/.test(username)) {
+      return res.status(400).json({ success: false, message: "Your saved GitHub username is invalid" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      github: await getPublicGitHubPortfolio(username),
+    });
+  } catch (error) {
+    if (error instanceof GitHubApiError) {
+      return res.status(error.status).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({ success: false, message: "Unable to load the GitHub portfolio" });
   }
 };
 

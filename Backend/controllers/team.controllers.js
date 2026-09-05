@@ -14,7 +14,7 @@ const internal = (res) => fail(res, 500, "Unable to process the team collaborati
 const isPlainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const getId = (value) => { const id = Number(value); return Number.isInteger(id) && id > 0 ? id : null; };
 const enumValue = (value) => typeof value === "string" ? value.trim().toLowerCase() : null;
-const safeTeam = ({ id, name, description, creator_name, created_at, updated_at, member_count, task_count }) => ({ id, name, description, creator_name, created_at, updated_at, ...(member_count === undefined ? {} : { member_count: Number(member_count) }), ...(task_count === undefined ? {} : { task_count: Number(task_count) }) });
+const safeTeam = ({ id, name, description, creator_name, created_at, updated_at, member_count, task_count, progress_percentage }) => ({ id, name, description, creator_name, created_at, updated_at, progress_percentage: Number(progress_percentage || 0), ...(member_count === undefined ? {} : { member_count: Number(member_count) }), ...(task_count === undefined ? {} : { task_count: Number(task_count) }) });
 const safeTask = ({ id, team_id, title, description, assigned_to, status, priority, due_at, created_at, updated_at, assignee_name, creator_name }) => ({ id, team_id, title, description, assigned_to, status, priority, due_at, created_at, updated_at, assignee_name, creator_name });
 const notify = (recipient, data) => createNotification(recipient, data).catch(() => undefined);
 

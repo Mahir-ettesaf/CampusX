@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getProfile,
+  getGitHubPortfolio,
   updateAcademicProfile,
   updateFacultyProfile,
   updateProfile,
@@ -19,6 +20,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.get("/", getProfile);
+router.get("/github-portfolio", getGitHubPortfolio);
 router.put("/", updateProfile);
 router.put("/academic", updateAcademicProfile);
 router.put("/faculty", updateFacultyProfile);

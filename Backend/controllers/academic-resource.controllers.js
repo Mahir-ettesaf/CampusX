@@ -5,6 +5,7 @@ import {
   listAcademicResources,
   updateAcademicResource,
 } from "../models/academic-resource.model.js";
+import { PortfolioUploadError, storePortfolioFile } from "../services/portfolio-upload.service.js";
 
 const RESOURCE_TYPES = new Set(["lecture_notes", "slides", "lab_manual", "previous_questions", "research_material", "other"]);
 const STATUSES = new Set(["draft", "published", "archived"]);
@@ -154,3 +155,5 @@ export const deleteResource = async (req, res) => {
     return internal(res);
   }
 };
+
+export const uploadResourceFile = async (req, res) => { const resourceId = getId(req.params.resourceId); if (!resourceId) return fail(res, 400, "Provide a valid resource ID"); if (!MANAGEMENT_ROLES.has(req.user.role)) return fail(res, 403, "Only faculty and administrators can upload academic resources"); try { const resource = await findAcademicResource(resourceId); if (!resource || !canManage(req, resource)) return fail(res, 404, "Academic resource was not found"); const resource_url = await storePortfolioFile(req.file, `resources/user-${req.user.id}`, resourceId); return res.json({ success: true, message: "Academic resource file uploaded successfully", resource: safeResource(await updateAcademicResource(resourceId, { resource_url })) }); } catch (error) { return fail(res, error instanceof PortfolioUploadError ? error.status : 500, error instanceof PortfolioUploadError ? error.message : "Unable to upload the academic resource file"); } };

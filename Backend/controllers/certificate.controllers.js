@@ -5,6 +5,7 @@ import {
   findUserCertificates,
   updateUserCertificate,
 } from "../models/certificate.model.js";
+import { PortfolioUploadError, storePortfolioFile } from "../services/portfolio-upload.service.js";
 
 const EDITABLE_FIELDS = new Set([
   "title",
@@ -229,3 +230,5 @@ export const deleteMyCertificate = async (req, res) => {
     return respondInternalError(res);
   }
 };
+
+export const uploadMyCertificateFile = async (req, res) => { const certificateId = getCertificateId(req.params.certificateId); if (!certificateId) return res.status(400).json({ success: false, message: "Provide a valid certificate ID" }); try { if (!await findUserCertificate(req.user.id, certificateId)) return res.status(404).json({ success: false, message: "Certificate was not found" }); const credential_url = await storePortfolioFile(req.file, `certificates/user-${req.user.id}`, certificateId); const certificate = await updateUserCertificate(req.user.id, certificateId, { credential_url }); return res.json({ success: true, message: "Certificate file uploaded successfully", certificate }); } catch (error) { return res.status(error instanceof PortfolioUploadError ? error.status : 500).json({ success: false, message: error instanceof PortfolioUploadError ? error.message : "Unable to upload the certificate file" }); } };

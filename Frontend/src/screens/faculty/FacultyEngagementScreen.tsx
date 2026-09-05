@@ -1,0 +1,19 @@
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { clearAuthSession, getStoredAuthSession } from "../../services/authservice";
+import { getMyResources } from "../../services/academic-resource.service";
+import { getAnnouncements } from "../../services/announcement.service";
+import { getMyFacultyOpportunities } from "../../services/opportunity.service";
+
+export default function FacultyEngagementScreen() {
+  const navigation = useNavigation<any>(); const [stats, setStats] = useState<{ resources: number; announcements: number; opportunities: number; published: number } | null>(null); const [loading, setLoading] = useState(true); const [refreshing, setRefreshing] = useState(false); const [error, setError] = useState("");
+  const reset = useCallback(async () => { await clearAuthSession(); navigation.reset({ index: 0, routes: [{ name: "Welcome" }] }); }, [navigation]);
+  const load = useCallback(async (refresh = false) => { refresh ? setRefreshing(true) : setLoading(true); try { const session = await getStoredAuthSession(); if (!session || session.user.role !== "faculty") { if (!session) await reset(); else setError("Faculty access is required."); return; } const [resources, announcements, opportunities] = await Promise.all([getMyResources(), getAnnouncements(), getMyFacultyOpportunities()]); setStats({ resources: resources.length, announcements: announcements.filter((item) => item.status === "published").length, opportunities: opportunities.length, published: opportunities.filter((item) => item.status === "published").length }); setError(""); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Unable to load faculty activity."); } finally { setLoading(false); setRefreshing(false); } }, [reset]);
+  useEffect(() => { void load(); }, [load]);
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2563EB" /></View>;
+  if (!stats) return <View style={styles.center}><Text style={styles.error}>{error || "Unable to load faculty activity."}</Text><TouchableOpacity onPress={() => void load()}><Text style={styles.link}>Retry</Text></TouchableOpacity></View>;
+  return <ScrollView style={styles.page} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}><TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.link}>Back to Home</Text></TouchableOpacity><Text style={styles.title}>Faculty Engagement</Text><Text style={styles.subtitle}>A simple summary of your CampusX activity.</Text><Metric label="Resources uploaded" value={stats.resources} /><Metric label="Published announcements" value={stats.announcements} /><Metric label="Opportunities created" value={stats.opportunities} /><Metric label="Published opportunities" value={stats.published} />{error ? <Text style={styles.error}>{error}</Text> : null}</ScrollView>;
+}
+function Metric({ label, value }: { label: string; value: number }) { return <View style={styles.card}><Text style={styles.value}>{value}</Text><Text style={styles.label}>{label}</Text></View>; }
+const styles = StyleSheet.create({ center:{flex:1,justifyContent:"center",alignItems:"center",padding:24,backgroundColor:"#fff"},page:{flex:1,backgroundColor:"#fff"},content:{padding:24,paddingBottom:48},link:{color:"#2563EB",fontWeight:"600",marginBottom:16},title:{color:"#1E3A8A",fontSize:30,fontWeight:"bold"},subtitle:{color:"#666",marginTop:6,marginBottom:16},card:{borderWidth:1,borderColor:"#E5E7EB",borderRadius:10,padding:16,marginTop:10},value:{color:"#2563EB",fontSize:28,fontWeight:"bold"},label:{color:"#4B5563",fontWeight:"600",marginTop:6},error:{color:"#DC2626",textAlign:"center"} });

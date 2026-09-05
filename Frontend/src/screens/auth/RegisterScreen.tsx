@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  ActivityIndicator,
   View,
   Text,
   TextInput,
@@ -7,6 +8,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+import { getApiErrorMessage, registerUser } from "../../services/authservice";
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
@@ -16,6 +19,54 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const showError = (title: string, message: string) => {
+    setErrorMessage(message);
+    Toast.show({ type: "error", text1: title, text2: message });
+  };
+
+  const handleRegister = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedName = fullName.trim();
+    setErrorMessage("");
+
+    if (!trimmedName || !normalizedEmail || !password || !confirmPassword || !role) {
+      showError("Missing information", "Please complete every field and select a role.");
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      showError("Invalid email", "Enter a valid email address.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError("Passwords do not match", "Confirm the same password in both fields.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await registerUser({
+        full_name: trimmedName,
+        email: normalizedEmail,
+        password,
+        role,
+      });
+      Toast.show({ type: "success", text1: "Account created", text2: response.message || "You can now log in." });
+      navigation.replace("Login");
+    } catch (error) {
+      showError(
+        "Registration failed",
+        getApiErrorMessage(error, "Please check your connection and try again."),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -119,11 +170,17 @@ export default function RegisterScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Register</Text>
+      {!!errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+
+      <TouchableOpacity
+        style={[styles.button, isLoading && styles.disabledButton]}
+        onPress={handleRegister}
+        disabled={isLoading}
+      >
+        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+      <TouchableOpacity onPress={() => navigation.navigate("Login")} disabled={isLoading}>
         <Text style={styles.link}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
@@ -205,6 +262,16 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+
+  disabledButton: {
+    opacity: 0.7,
+  },
+
+  errorText: {
+    color: "#DC2626",
+    marginBottom: 12,
+    textAlign: "center",
   },
 
   link: {

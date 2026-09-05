@@ -5,6 +5,7 @@ import {
   findUserProjects,
   updateUserProject,
 } from "../models/project.model.js";
+import { PortfolioUploadError, storePortfolioFile } from "../services/portfolio-upload.service.js";
 
 const EDITABLE_FIELDS = new Set([
   "title",
@@ -188,3 +189,5 @@ export const deleteMyProject = async (req, res) => {
     return respondInternalError(res);
   }
 };
+
+export const uploadMyProjectFile = async (req, res) => { const projectId = getProjectId(req.params.projectId); if (!projectId) return res.status(400).json({ success: false, message: "Provide a valid project ID" }); try { if (!await findUserProject(req.user.id, projectId)) return res.status(404).json({ success: false, message: "Project was not found" }); const project_url = await storePortfolioFile(req.file, `projects/user-${req.user.id}`, projectId); const project = await updateUserProject(req.user.id, projectId, { project_url }); return res.json({ success: true, message: "Project evidence uploaded successfully", project }); } catch (error) { return res.status(error instanceof PortfolioUploadError ? error.status : 500).json({ success: false, message: error instanceof PortfolioUploadError ? error.message : "Unable to upload the project evidence" }); } };

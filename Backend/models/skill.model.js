@@ -37,6 +37,20 @@ export const findUserSkills = async (userId) => {
   );
 };
 
+export const findUserSkillsForUsers = async (userIds) => {
+  if (!userIds.length) return [];
+
+  return query(
+    `SELECT us.user_id, s.id AS skill_id, s.name, s.normalized_name,
+            us.proficiency_level, us.created_at, us.updated_at
+     FROM user_skills us
+     INNER JOIN skills s ON s.id = us.skill_id
+     WHERE us.user_id IN (${userIds.map(() => "?").join(", ")})
+     ORDER BY s.name`,
+    userIds,
+  );
+};
+
 export const findOrCreateSkill = async (name, normalizedName) => {
   const existingSkills = await query(
     "SELECT id, name, normalized_name FROM skills WHERE normalized_name = ?",

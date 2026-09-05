@@ -26,6 +26,7 @@ import notificationsRoutes from "./routes/notifications.routes.js";
 import learningPathRoutes from "./routes/learning-path.routes.js";
 import adminUsersRoutes from "./routes/admin-users.routes.js";
 import adminOpportunitiesRoutes from "./routes/admin-opportunities.routes.js";
+import thesisMilestonesRoutes from "./routes/thesis-milestones.routes.js";
 
 const app = express();
 app.use(cors());
@@ -61,5 +62,6 @@ app.use("/api/notifications", notificationsRoutes);
 app.use("/api/learning-path", learningPathRoutes);
 app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/admin/opportunities", adminOpportunitiesRoutes);
+app.use("/api/thesis-milestones", thesisMilestonesRoutes);
 
 export default app;

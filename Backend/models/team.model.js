@@ -2,7 +2,9 @@ import db from "../config/db.js";
 
 const query = (sql, values = []) => new Promise((resolve, reject) => db.query(sql, values, (error, results) => error ? reject(error) : resolve(results)));
 const transaction = (work) => new Promise((resolve, reject) => db.beginTransaction(async (beginError) => { if (beginError) return reject(beginError); try { const result = await work((sql, values = []) => new Promise((done, fail) => db.query(sql, values, (error, rows) => error ? fail(error) : done(rows)))); db.commit((commitError) => commitError ? reject(commitError) : resolve(result)); } catch (error) { db.rollback(() => reject(error)); } }));
-const teamColumns = "t.id, t.name, t.description, t.created_by, t.created_at, t.updated_at, u.full_name AS creator_name";
+const teamColumns = `t.id, t.name, t.description, t.created_by, t.created_at, t.updated_at, u.full_name AS creator_name,
+  (SELECT CASE WHEN COUNT(*) = 0 THEN 0 ELSE ROUND(100 * SUM(progress_task.status = 'completed') / COUNT(*)) END
+   FROM team_tasks progress_task WHERE progress_task.team_id = t.id AND progress_task.status <> 'cancelled') AS progress_percentage`;
 const taskColumns = "tt.id, tt.team_id, tt.title, tt.description, tt.assigned_to, tt.status, tt.priority, tt.due_at, tt.created_at, tt.updated_at, assignee.full_name AS assignee_name, creator.full_name AS creator_name";
 
 export const findUserTeams = (userId) => query(`SELECT ${teamColumns}, COUNT(DISTINCT tm_all.user_id) AS member_count, COUNT(DISTINCT tt.id) AS task_count FROM project_teams t INNER JOIN team_members mine ON mine.team_id = t.id AND mine.user_id = ? INNER JOIN users u ON u.id = t.created_by LEFT JOIN team_members tm_all ON tm_all.team_id = t.id LEFT JOIN team_tasks tt ON tt.team_id = t.id GROUP BY t.id ORDER BY t.updated_at DESC, t.id DESC`, [userId]);

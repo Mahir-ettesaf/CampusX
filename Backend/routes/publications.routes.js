@@ -1,10 +1,12 @@
 import express from "express";
 import { authenticateToken } from "../middleware/auth.middleware.js";
-import { createMyPublication, deleteMyPublication, getMyPublications, updateMyPublication } from "../controllers/publication.controllers.js";
+import { createMyPublication, deleteMyPublication, getMyPublications, updateMyPublication, uploadMyPublicationFile } from "../controllers/publication.controllers.js";
+import { portfolioFileUpload } from "../services/portfolio-upload.service.js";
 const router = express.Router();
 router.use(authenticateToken);
 router.get("/", getMyPublications);
 router.post("/", createMyPublication);
+router.post("/:publicationId/upload", portfolioFileUpload, uploadMyPublicationFile);
 router.put("/:publicationId", updateMyPublication);
 router.delete("/:publicationId", deleteMyPublication);
 export default router;
