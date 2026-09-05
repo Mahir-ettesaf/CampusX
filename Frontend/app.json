@@ -1,10 +1,16 @@
 {
   "expo": {
-    "name": "Frontend",
+    "name": "CampusX",
+    "description": "Integrated Student Career & Academic Platform",
     "slug": "Frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#071426"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
