@@ -1,13 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Image, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
+import CampusXAtmosphere from "../../components/CampusXAtmosphere";
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<any>();
 
   return (
     <View style={[ui.screen, styles.container]}>
-      <View style={styles.brandMark}><Text style={styles.brandMarkText}>CX</Text></View>
+      <CampusXAtmosphere />
+      <View style={styles.brandMark}><Image source={require("../../../assets/icon.png")} style={styles.brandMarkImage} resizeMode="contain" /></View>
       <Text style={styles.title}>CampusX</Text>
       <Text style={styles.subtitle}>Your career and campus experience, connected.</Text>
 
@@ -29,9 +31,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: spacing.xl,
+    overflow: "hidden",
   },
-  brandMark: { width: 72, height: 72, borderRadius: 36, justifyContent: "center", alignItems: "center", backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.primary, marginBottom: spacing.lg },
-  brandMarkText: { color: colors.primary, fontSize: 23, fontWeight: "800", letterSpacing: 1 },
+  brandMark: { width: 72, height: 72, borderRadius: 36, justifyContent: "center", alignItems: "center", overflow: "hidden", backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.primary, marginBottom: spacing.lg },
+  brandMarkImage: { width: "100%", height: "100%" },
   title: {
     ...typography.screenTitle,
     fontSize: 36,

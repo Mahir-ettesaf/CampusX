@@ -5,12 +5,14 @@ import {
   findFacultyProfile,
   findRecruiterProfile,
   findUserProfile,
+  updateUserProfilePicture,
   upsertAcademicProfile,
   upsertCommonProfile,
   upsertFacultyProfile,
   upsertRecruiterProfile,
 } from "../models/profile.model.js";
 import { GitHubApiError, getPublicGitHubPortfolio } from "../services/github.service.js";
+import { PortfolioUploadError, storePortfolioFile } from "../services/portfolio-upload.service.js";
 
 const COMMON_PROFILE_FIELDS = [
   "headline",
@@ -134,6 +136,20 @@ export const updateProfile = async (req, res) => {
     return res.status(200).json({ success: true, message: "Profile updated successfully", profile });
   } catch {
     return respondInternalError(res);
+  }
+};
+
+export const uploadProfilePicture = async (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: "Choose a JPG or PNG profile photo." });
+
+  try {
+    const profile_picture = await storePortfolioFile(req.file, `profile-images/user-${req.user.id}`, req.user.id);
+    const user = await updateUserProfilePicture(req.user.id, profile_picture);
+    return res.status(200).json({ success: true, message: "Profile photo updated successfully", user });
+  } catch (error) {
+    const status = error instanceof PortfolioUploadError ? error.status : 500;
+    const message = error instanceof PortfolioUploadError ? error.message : "Unable to upload the profile photo";
+    return res.status(status).json({ success: false, message });
   }
 };
 

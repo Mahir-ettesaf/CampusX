@@ -41,6 +41,24 @@ export const loginUser = async (userData: {
   return response.data;
 };
 
+export const requestPasswordReset = async (email: string) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/auth/password-reset/request`,
+    { email },
+    { timeout: 10000 },
+  );
+  return response.data;
+};
+
+export const resetPassword = async (token: string, password: string) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/auth/password-reset/confirm`,
+    { token, password },
+    { timeout: 10000 },
+  );
+  return response.data;
+};
+
 export const saveAuthSession = async (session: AuthSession) => {
   await SecureStore.setItemAsync(AUTH_SESSION_KEY, JSON.stringify(session));
 };

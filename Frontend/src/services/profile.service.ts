@@ -114,6 +114,18 @@ export const updateProfile = async (
 
   return response.data.profile;
 };
+
+export const uploadProfilePicture = async (file: { uri: string; name: string; mimeType: string }): Promise<ProfileResponse["user"]> => {
+  const form = new FormData();
+  form.append("file", { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+  const request = await getAuthenticatedConfig();
+  const response = await axios.post<{ user: ProfileResponse["user"] }>(
+    `${API_BASE_URL}/profile/picture`,
+    form,
+    { ...request, headers: { ...request.headers, "Content-Type": "multipart/form-data" } },
+  );
+  return response.data.user;
+};
 export const updateRecruiterProfile=async(company_id:number,job_title:string)=>{const response=await axios.put<{recruiter_profile:RecruiterProfile}>(`${API_BASE_URL}/profile/recruiter`,{company_id,job_title},await getAuthenticatedConfig());return response.data.recruiter_profile;};
 
 export const getProfileErrorMessage = (error: unknown) => {

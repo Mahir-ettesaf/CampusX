@@ -22,6 +22,11 @@ export const findUserProfile = async (userId) => {
   return results[0] || null;
 };
 
+export const updateUserProfilePicture = async (userId, profilePicture) => {
+  await query("UPDATE users SET profile_picture = ? WHERE id = ?", [profilePicture, userId]);
+  return findUserProfile(userId);
+};
+
 export const findCommonProfile = async (userId) => {
   const results = await query("SELECT * FROM profiles WHERE user_id = ?", [userId]);
   return results[0] || null;

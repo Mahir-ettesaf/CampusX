@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   View,
@@ -11,9 +11,13 @@ import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import { getApiErrorMessage, registerUser } from "../../services/authservice";
 import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
+import CampusXAtmosphere from "../../components/CampusXAtmosphere";
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -71,6 +75,7 @@ export default function RegisterScreen() {
 
   return (
     <View style={[ui.screen, styles.container]}>
+      <CampusXAtmosphere />
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join the CampusX career community.</Text>
 
@@ -80,6 +85,12 @@ export default function RegisterScreen() {
         style={[ui.input, styles.input]}
         value={fullName}
         onChangeText={setFullName}
+        autoComplete="name"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => emailInputRef.current?.focus()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
 
       <TextInput
@@ -88,8 +99,15 @@ export default function RegisterScreen() {
         style={[ui.input, styles.input]}
         value={email}
         onChangeText={setEmail}
+        ref={emailInputRef}
         keyboardType="email-address"
         autoCapitalize="none"
+        autoComplete="email"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordInputRef.current?.focus()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
 
       <TextInput
@@ -99,6 +117,13 @@ export default function RegisterScreen() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        ref={passwordInputRef}
+        autoComplete="new-password"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
 
       <TextInput
@@ -108,6 +133,12 @@ export default function RegisterScreen() {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
+        ref={confirmPasswordInputRef}
+        autoComplete="new-password"
+        returnKeyType="done"
+        onSubmitEditing={() => void handleRegister()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
 
       <Text style={styles.roleTitle}>Select Your Role</Text>
@@ -198,6 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: spacing.xl,
+    overflow: "hidden",
   },
   title: {
     ...typography.screenTitle,

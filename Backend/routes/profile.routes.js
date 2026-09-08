@@ -2,11 +2,13 @@ import express from "express";
 import {
   getProfile,
   getGitHubPortfolio,
+  uploadProfilePicture,
   updateAcademicProfile,
   updateFacultyProfile,
   updateProfile,
   updateRecruiterProfile,
 } from "../controllers/profile.controllers.js";
+import { profileImageUpload } from "../services/portfolio-upload.service.js";
 import {
   addMySkill,
   deleteMySkill,
@@ -21,6 +23,7 @@ router.use(authenticateToken);
 
 router.get("/", getProfile);
 router.get("/github-portfolio", getGitHubPortfolio);
+router.post("/picture", profileImageUpload, uploadProfilePicture);
 router.put("/", updateProfile);
 router.put("/academic", updateAcademicProfile);
 router.put("/faculty", updateFacultyProfile);

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import * as DocumentPicker from "expo-document-picker";
 import {
   CommonProfileInput,
   getGitHubPortfolio,
@@ -19,6 +20,7 @@ import {
   getProfileErrorMessage,
   GitHubPortfolio,
   ProfileResponse,
+  uploadProfilePicture,
   updateProfile,
 } from "../../services/profile.service";
 import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
@@ -43,6 +45,7 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [githubPortfolio, setGithubPortfolio] = useState<GitHubPortfolio | null>(null);
   const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
   const [githubError, setGithubError] = useState("");
@@ -96,12 +99,37 @@ export default function ProfileScreen() {
         text1: "Profile saved",
         text2: "Your profile information has been updated.",
       });
+      navigation.goBack();
     } catch (error) {
       const message = getProfileErrorMessage(error);
       setErrorMessage(message);
       Toast.show({ type: "error", text1: "Unable to save profile", text2: message });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleProfilePicture = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: ["image/jpeg", "image/png"], copyToCacheDirectory: true });
+      if (result.canceled) return;
+      const file = result.assets[0];
+      if (!file?.mimeType || !["image/jpeg", "image/png"].includes(file.mimeType)) {
+        Toast.show({ type: "error", text1: "Unsupported image", text2: "Choose a JPG or PNG profile photo." });
+        return;
+      }
+      if (file.size && file.size > 5 * 1024 * 1024) {
+        Toast.show({ type: "error", text1: "Image too large", text2: "Profile photos must be 5 MB or smaller." });
+        return;
+      }
+      setIsUploadingPicture(true);
+      await uploadProfilePicture({ uri: file.uri, name: file.name || "profile-photo.jpg", mimeType: file.mimeType });
+      await loadProfile();
+      Toast.show({ type: "success", text1: "Profile photo updated" });
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Unable to upload photo", text2: getProfileErrorMessage(error) });
+    } finally {
+      setIsUploadingPicture(false);
     }
   };
 
@@ -152,7 +180,7 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <View style={styles.identitySection}>
-        <View style={styles.avatarWrap}>
+        <TouchableOpacity style={styles.avatarWrap} onPress={() => void handleProfilePicture()} disabled={isUploadingPicture || isSaving} accessibilityLabel="Change profile photo">
           {user.profile_picture ? (
             <Image source={{ uri: user.profile_picture }} style={styles.profilePicture} />
           ) : (
@@ -160,8 +188,8 @@ export default function ProfileScreen() {
               <Text style={styles.placeholderText}>{user.full_name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</Text>
             </View>
           )}
-          <View style={styles.avatarAffordance}><Text style={styles.avatarAffordanceText}>Profile</Text></View>
-        </View>
+          <View style={styles.avatarAffordance}><Text style={styles.avatarAffordanceText}>{isUploadingPicture ? "Uploading" : "Change"}</Text></View>
+        </TouchableOpacity>
         <Text style={styles.name}>{user.full_name}</Text>
         <Text style={styles.details}>{user.email}</Text>
         <View style={styles.roleBadge}><Text style={styles.role}>{user.role}</Text></View>

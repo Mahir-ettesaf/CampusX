@@ -1,4 +1,6 @@
 import Toast from "react-native-toast-message";
+import { useCallback, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { createNavigationContainerRef, DarkTheme, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -6,6 +8,8 @@ import SplashScreen from "../screens/common/SplashScreen";
 import WelcomeScreen from "../screens/common/WelcomeScreen";
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
+import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
+import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
 import AuthenticatedScreen from "../screens/common/AuthenticatedScreen";
 import ApplicationsScreen from "../screens/common/ApplicationsScreen";
 import ApplicationDetailsScreen from "../screens/common/ApplicationDetailsScreen";
@@ -83,15 +87,26 @@ import SkillMatchScreen from "../screens/common/SkillMatchScreen";
 import RecommendationsScreen from "../screens/common/RecommendationsScreen";
 import { navigationColors } from "../theme/CampusXTheme";
 import { CampusXDrawerProvider } from "../components/CampusXDrawer";
+import CampusXBottomNavigation from "../components/CampusXBottomNavigation";
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef<any>();
+const linking = {
+  prefixes: ["campusx://"],
+  config: { screens: { ResetPassword: "reset-password" } },
+};
 
 export default function AppNavigator() {
+  const [currentRoute, setCurrentRoute] = useState<string>();
+  const updateCurrentRoute = useCallback(() => {
+    if (navigationRef.isReady()) setCurrentRoute(navigationRef.getCurrentRoute()?.name);
+  }, []);
+
   return (
     <>
-      <NavigationContainer ref={navigationRef} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, ...navigationColors } }}>
+      <NavigationContainer ref={navigationRef} linking={linking} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, ...navigationColors } }} onReady={updateCurrentRoute} onStateChange={updateCurrentRoute}>
         <CampusXDrawerProvider navigationRef={navigationRef}>
+        <View style={styles.shell}>
         <Stack.Navigator
           initialRouteName="Splash"
           screenOptions={{
@@ -102,6 +117,8 @@ export default function AppNavigator() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           <Stack.Screen name="Authenticated" component={AuthenticatedScreen} />
           <Stack.Screen name="Applications" component={ApplicationsScreen} />
           <Stack.Screen name="ApplicationDetails" component={ApplicationDetailsScreen} />
@@ -178,6 +195,8 @@ export default function AppNavigator() {
           <Stack.Screen name="SkillMatch" component={SkillMatchScreen} />
           <Stack.Screen name="Recommendations" component={RecommendationsScreen} />
         </Stack.Navigator>
+        <CampusXBottomNavigation navigationRef={navigationRef} currentRoute={currentRoute} />
+        </View>
         </CampusXDrawerProvider>
       </NavigationContainer>
 
@@ -185,3 +204,5 @@ export default function AppNavigator() {
     </>
   );
 }
+
+const styles = StyleSheet.create({ shell: { flex: 1 } });

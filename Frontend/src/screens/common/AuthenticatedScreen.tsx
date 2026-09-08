@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import {
   clearAuthSession,
@@ -21,6 +22,7 @@ import {
 } from "../../services/career-readiness.service";
 import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import { CampusXDrawerButton } from "../../components/CampusXDrawer";
+import { getProfile } from "../../services/profile.service";
 
 const typeLabels: Record<OpportunityRecommendation["opportunity"]["type"], string> = {
   internship: "Internship",
@@ -32,11 +34,27 @@ const typeLabels: Record<OpportunityRecommendation["opportunity"]["type"], strin
 
 const isApplicantRole = (role?: string) => role === "student" || role === "graduate";
 
+type DashboardAction = { label: string; route: string; icon: keyof typeof Ionicons.glyphMap };
+
+const applicantActions: DashboardAction[] = [
+  { label: "Opportunities", route: "Opportunities", icon: "briefcase-outline" },
+  { label: "Skill Match", route: "SkillMatch", icon: "sparkles-outline" },
+  { label: "Learning Path", route: "LearningPath", icon: "map-outline" },
+  { label: "Teams", route: "Teams", icon: "people-outline" },
+];
+
+const roleActions: Record<string, DashboardAction[]> = {
+  faculty: [{ label: "Engagement", route: "FacultyEngagement", icon: "pulse-outline" }, { label: "Opportunities", route: "FacultyOpportunities", icon: "briefcase-outline" }, { label: "Applicants", route: "FacultyOpportunities", icon: "people-outline" }, { label: "Resources", route: "FacultyResources", icon: "library-outline" }, { label: "Announce", route: "FacultyAnnouncements", icon: "megaphone-outline" }, { label: "Profile", route: "Profile", icon: "person-outline" }],
+  recruiter: [{ label: "Profile", route: "RecruiterProfile", icon: "person-outline" }, { label: "Jobs", route: "RecruiterOpportunities", icon: "briefcase-outline" }, { label: "Applicants", route: "RecruiterOpportunities", icon: "people-outline" }, { label: "Announcements", route: "RecruiterAnnouncements", icon: "megaphone-outline" }],
+  admin: [{ label: "Overview", route: "AdminDashboard", icon: "analytics-outline" }, { label: "Companies", route: "AdminCompanies", icon: "business-outline" }, { label: "Users", route: "AdminUsers", icon: "people-outline" }, { label: "Opportunities", route: "AdminOpportunities", icon: "briefcase-outline" }, { label: "Resources", route: "AdminResources", icon: "library-outline" }, { label: "Announce", route: "AdminAnnouncements", icon: "megaphone-outline" }],
+};
+
 export default function AuthenticatedScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const routeUser = route.params?.user as User | undefined;
   const [user, setUser] = useState<User | undefined>(routeUser);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(!routeUser);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [recommendations, setRecommendations] = useState<OpportunityRecommendation[]>([]);
@@ -117,6 +135,15 @@ export default function AuthenticatedScreen() {
   }, [navigation, routeUser]);
 
   useEffect(() => {
+    let active = true;
+    if (!user) return;
+    void getProfile().then((profile) => {
+      if (active) setProfilePicture(profile.user.profile_picture || null);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [user?.id]);
+
+  useEffect(() => {
     void loadRecommendations();
   }, [loadRecommendations]);
 
@@ -173,8 +200,9 @@ export default function AuthenticatedScreen() {
           </View>
           <View style={styles.headerActions}>
             <CampusXDrawerButton />
-            <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate("Notifications")} disabled={isLoggingOut}>
-              <Text style={styles.notificationText}>Notifications</Text>
+            <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate("Notifications")} disabled={isLoggingOut} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" color={colors.primary} size={20} /></TouchableOpacity>
+            <TouchableOpacity style={styles.headerAvatar} onPress={() => navigation.navigate("Profile")} disabled={isLoggingOut} accessibilityLabel="Profile">
+              {profilePicture ? <Image source={{ uri: profilePicture }} style={styles.headerAvatarImage} /> : <Text style={styles.headerAvatarText}>{(user?.full_name || "CampusX User").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -200,12 +228,7 @@ export default function AuthenticatedScreen() {
         </View>
 
         <Text style={styles.sectionHeading}>Quick access</Text>
-        <View style={styles.quickGrid}>
-          <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate("Opportunities")} disabled={isLoggingOut}><Text style={styles.quickEyebrow}>EXPLORE</Text><Text style={styles.quickTitle}>Jobs & Internships</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate("SkillMatch")} disabled={isLoggingOut}><Text style={styles.quickEyebrow}>PREPARE</Text><Text style={styles.quickTitle}>Skill Match</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate("LearningPath")} disabled={isLoggingOut}><Text style={styles.quickEyebrow}>GROW</Text><Text style={styles.quickTitle}>Learning Path</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate("Teams")} disabled={isLoggingOut}><Text style={styles.quickEyebrow}>COLLABORATE</Text><Text style={styles.quickTitle}>Teams</Text></TouchableOpacity>
-        </View>
+        <DashboardActionGrid items={user?.role === "graduate" ? [...applicantActions, { label: "Thesis", route: "ThesisMilestones", icon: "flask-outline" }, { label: "Resources", route: "AcademicResources", icon: "library-outline" }] : applicantActions} navigation={navigation} disabled={isLoggingOut} />
 
         <Text style={styles.utilityHeading}>Career & campus tools</Text>
         <View style={styles.utilityRow}>
@@ -219,22 +242,7 @@ export default function AuthenticatedScreen() {
         </View>
       </> : null}
 
-      {!isApplicantRole(user?.role) ? <TouchableOpacity
-        style={[ui.outlineButton, styles.profileButton]}
-        onPress={() => navigation.navigate("Profile")}
-        disabled={isLoggingOut}
-      >
-        <Text style={ui.outlineButtonText}>View Profile</Text>
-      </TouchableOpacity> : null}
-      {!isApplicantRole(user?.role) ? <TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("Notifications")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Notifications</Text></TouchableOpacity> : null}
-
-      {user?.role === "faculty" && <><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("FacultyEngagement")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Engagement Summary</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("FacultyOpportunities")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Opportunities</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("FacultyOpportunities")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Applications by Opportunity</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("FacultyResources")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Academic Resources</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("FacultyAnnouncements")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Academic Announcements</Text></TouchableOpacity></>}
-      {user?.role === "recruiter" && <><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("RecruiterProfile")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Recruiter Profile</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("RecruiterOpportunities")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Jobs & Internships</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("RecruiterOpportunities")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Applications by Opportunity</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("RecruiterAnnouncements")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Announcements</Text></TouchableOpacity></>}
-      {user?.role === "admin" && <><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminDashboard")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Dashboard Overview</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminCompanies")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Companies</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminUsers")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Users</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminOpportunities")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Opportunities</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminResources")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Academic Resources</Text></TouchableOpacity><TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("AdminAnnouncements")} disabled={isLoggingOut}><Text style={styles.profileButtonText}>Manage Announcements</Text></TouchableOpacity></>}
-
-      {!isApplicantRole(user?.role) ? <TouchableOpacity style={styles.opportunitiesButton} onPress={() => navigation.navigate("Opportunities")} disabled={isLoggingOut}>
-        <Text style={styles.profileButtonText}>Browse Opportunities</Text>
-      </TouchableOpacity> : null}
+      {!isApplicantRole(user?.role) ? <><Text style={styles.sectionHeading}>Command center</Text><DashboardActionGrid items={roleActions[user?.role || ""] || []} navigation={navigation} disabled={isLoggingOut} /><TouchableOpacity style={[ui.outlineButton, styles.browseButton]} onPress={() => navigation.navigate("Opportunities")} disabled={isLoggingOut}><Text style={ui.outlineButtonText}>Browse Opportunities</Text></TouchableOpacity></> : null}
 
       {isApplicantRole(user?.role) ? (
         <View style={styles.recommendationSection}>
@@ -303,6 +311,13 @@ function ReadinessRing({ score }: { score: number }) {
   </View>;
 }
 
+function DashboardActionGrid({ items, navigation, disabled }: { items: DashboardAction[]; navigation: any; disabled: boolean }) {
+  return <View style={styles.quickGrid}>{items.map((item) => <TouchableOpacity key={`${item.route}-${item.label}`} style={styles.quickCard} onPress={() => navigation.navigate(item.route)} disabled={disabled} accessibilityLabel={item.label}>
+    <View style={styles.quickIcon}><Ionicons name={item.icon} size={21} color={colors.secondary} /></View>
+    <Text style={styles.quickTitle}>{item.label}</Text>
+  </TouchableOpacity>)}</View>;
+}
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: "center",
@@ -317,8 +332,10 @@ const styles = StyleSheet.create({
   heroTopRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md },
   headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   heroCopy: { flex: 1 },
-  notificationButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surfaceRaised },
-  notificationText: { color: colors.primary, fontSize: 12, fontWeight: "700" },
+  notificationButton: { width: 42, height: 42, borderWidth: 1, borderColor: colors.border, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceRaised },
+  headerAvatar: { width: 42, height: 42, borderRadius: 21, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.secondary },
+  headerAvatarImage: { width: "100%", height: "100%" },
+  headerAvatarText: { color: colors.text, fontSize: 13, fontWeight: "800" },
   eyebrow: { color: colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2, marginBottom: spacing.sm },
   graduateEyebrow: { color: colors.secondary },
   title: {
@@ -354,7 +371,8 @@ const styles = StyleSheet.create({
   readinessError: { color: colors.error, lineHeight: 20, marginTop: spacing.lg },
   sectionHeading: { ...typography.sectionTitle, width: "100%", marginBottom: spacing.md },
   quickGrid: { width: "100%", flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
-  quickCard: { width: "48%", minHeight: 116, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: spacing.lg, justifyContent: "space-between" },
+  quickCard: { width: "48%", minHeight: 104, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, justifyContent: "space-between" },
+  quickIcon: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSoft },
   quickEyebrow: { color: colors.secondary, fontSize: 11, letterSpacing: 0.9, fontWeight: "800" },
   quickTitle: { color: colors.text, fontSize: 16, lineHeight: 21, fontWeight: "700" },
   utilityRow: { width: "100%", flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.lg },
@@ -368,25 +386,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 36,
   },
-  profileButton: {
-    width: "100%",
-    marginTop: spacing.sm,
-  },
-  opportunitiesButton: {
-    width: "100%",
-    minHeight: 52,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  profileButtonText: {
-    color: colors.text,
-    ...typography.button,
-  },
+  browseButton: { width: "100%", marginTop: spacing.lg },
   recommendationSection: {
     width: "100%",
     marginTop: spacing.xxl,

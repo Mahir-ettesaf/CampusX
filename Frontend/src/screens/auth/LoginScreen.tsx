@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   View,
@@ -15,9 +15,11 @@ import {
   saveAuthSession,
 } from "../../services/authservice";
 import { colors, spacing, typography, ui } from "../../theme/CampusXTheme";
+import CampusXAtmosphere from "../../components/CampusXAtmosphere";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,6 +57,7 @@ export default function LoginScreen() {
 
   return (
     <View style={[ui.screen, styles.container]}>
+      <CampusXAtmosphere />
       <Text style={styles.title}>Login</Text>
       <Text style={styles.subtitle}>Welcome back. Continue building your future.</Text>
 
@@ -65,6 +68,13 @@ export default function LoginScreen() {
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordInputRef.current?.focus()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
 
       <TextInput
@@ -74,7 +84,17 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        ref={passwordInputRef}
+        autoComplete="password"
+        returnKeyType="done"
+        onSubmitEditing={() => void handleLogin()}
+        selectionColor={colors.primary}
+        cursorColor={colors.primary}
       />
+
+      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")} disabled={isLoading}>
+        <Text style={styles.forgotPassword}>Forgot password?</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[ui.primaryButton, styles.button, isLoading && ui.disabled]}
@@ -96,6 +116,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: spacing.xl,
+    overflow: "hidden",
   },
   title: {
     ...typography.screenTitle,
@@ -108,6 +129,12 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: spacing.sm,
+  },
+  forgotPassword: {
+    color: colors.primary,
+    fontWeight: "700",
+    textAlign: "right",
+    marginTop: -spacing.sm,
   },
   link: {
     marginTop: spacing.xl,
