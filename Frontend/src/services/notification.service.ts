@@ -8,6 +8,7 @@ export type NotificationListOptions = { unread?:true; limit?:number; offset?:num
 
 const authenticatedConfig = async () => { const session=await getStoredAuthSession(); if(!session) throw new Error("Your session has expired. Please log in again."); return {headers:{Authorization:`Bearer ${session.token}`},timeout:10000}; };
 export const getNotifications = async (options:NotificationListOptions={}) => (await axios.get<{notifications:CampusNotification[]}>(`${API_BASE_URL}/notifications`,{...(await authenticatedConfig()),params:options})).data.notifications;
+export const getUnreadNotificationCount = async () => (await axios.get<{unreadCount:number}>(`${API_BASE_URL}/notifications/unread-count`,await authenticatedConfig())).data.unreadCount;
 export const getNotificationById = async (notificationId:number) => (await axios.get<{notification:CampusNotification}>(`${API_BASE_URL}/notifications/${notificationId}`,await authenticatedConfig())).data.notification;
 export const markNotificationAsRead = async (notificationId:number) => (await axios.put<{notification:CampusNotification}>(`${API_BASE_URL}/notifications/${notificationId}/read`,undefined,await authenticatedConfig())).data.notification;
 export const markAllNotificationsAsRead = async () => (await axios.put<{marked_count:number}>(`${API_BASE_URL}/notifications/read-all`,undefined,await authenticatedConfig())).data;

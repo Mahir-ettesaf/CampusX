@@ -35,6 +35,14 @@ export const listNotificationsForRecipient = (recipientUserId, { unread, limit, 
   );
 };
 
+export const countUnreadNotificationsForRecipient = async (recipientUserId) => {
+  const results = await query(
+    "SELECT COUNT(*) AS unread_count FROM notifications WHERE recipient_user_id = ? AND is_read = 0",
+    [recipientUserId],
+  );
+  return Number(results[0]?.unread_count || 0);
+};
+
 export const findNotificationForRecipient = async (notificationId, recipientUserId) =>
   (await query(`SELECT ${columns} FROM notifications WHERE id = ? AND recipient_user_id = ?`, [notificationId, recipientUserId]))[0] || null;
 

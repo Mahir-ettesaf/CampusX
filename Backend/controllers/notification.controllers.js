@@ -1,4 +1,5 @@
 import {
+  countUnreadNotificationsForRecipient,
   deleteNotificationForRecipient,
   findNotificationForRecipient,
   listNotificationsForRecipient,
@@ -26,6 +27,14 @@ export const listNotifications = async (req, res) => {
   if (validated.error) return fail(res, 400, validated.error);
   try { return res.json({ success: true, notifications: (await listNotificationsForRecipient(req.user.id, validated.options)).map(safeNotification) }); }
   catch { return internal(res); }
+};
+
+export const getUnreadNotificationCount = async (req, res) => {
+  try {
+    return res.json({ success: true, unreadCount: await countUnreadNotificationsForRecipient(req.user.id) });
+  } catch {
+    return internal(res);
+  }
 };
 
 export const getNotification = async (req, res) => {

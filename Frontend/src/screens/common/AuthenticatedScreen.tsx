@@ -23,6 +23,7 @@ import {
 import { colors, radius, spacing, typography, ui } from "../../theme/CampusXTheme";
 import { CampusXDrawerButton } from "../../components/CampusXDrawer";
 import { getProfile } from "../../services/profile.service";
+import { getUnreadNotificationCount } from "../../services/notification.service";
 
 const typeLabels: Record<OpportunityRecommendation["opportunity"]["type"], string> = {
   internship: "Internship",
@@ -64,6 +65,7 @@ export default function AuthenticatedScreen() {
   const [readiness, setReadiness] = useState<CareerReadiness | null>(null);
   const [isLoadingReadiness, setIsLoadingReadiness] = useState(false);
   const [readinessError, setReadinessError] = useState("");
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const resetForUnauthorized = useCallback(async () => {
     await clearAuthSession();
@@ -151,6 +153,21 @@ export default function AuthenticatedScreen() {
     void loadReadiness();
   }, [loadReadiness]);
 
+  const loadUnreadNotificationCount = useCallback(async () => {
+    try {
+      setUnreadNotificationCount(await getUnreadNotificationCount());
+    } catch {
+      // A badge failure must never prevent normal dashboard navigation.
+      setUnreadNotificationCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUnreadNotificationCount();
+    const unsubscribe = navigation.addListener("focus", () => void loadUnreadNotificationCount());
+    return unsubscribe;
+  }, [loadUnreadNotificationCount, navigation]);
+
   const refreshStudentDashboard = async () => {
     setIsRefreshing(true);
     try {
@@ -200,7 +217,7 @@ export default function AuthenticatedScreen() {
           </View>
           <View style={styles.headerActions}>
             <CampusXDrawerButton />
-            <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate("Notifications")} disabled={isLoggingOut} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" color={colors.primary} size={20} /></TouchableOpacity>
+            <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate("Notifications")} disabled={isLoggingOut} accessibilityLabel={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread notifications` : "Notifications"}><Ionicons name="notifications-outline" color={colors.primary} size={20} />{unreadNotificationCount > 0 ? <View style={styles.notificationBadge}><Text style={styles.notificationBadgeText}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</Text></View> : null}</TouchableOpacity>
             <TouchableOpacity style={styles.headerAvatar} onPress={() => navigation.navigate("Profile")} disabled={isLoggingOut} accessibilityLabel="Profile">
               {profilePicture ? <Image source={{ uri: profilePicture }} style={styles.headerAvatarImage} /> : <Text style={styles.headerAvatarText}>{(user?.full_name || "CampusX User").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</Text>}
             </TouchableOpacity>
@@ -332,7 +349,9 @@ const styles = StyleSheet.create({
   heroTopRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md },
   headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   heroCopy: { flex: 1 },
-  notificationButton: { width: 42, height: 42, borderWidth: 1, borderColor: colors.border, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceRaised },
+  notificationButton: { width: 42, height: 42, borderWidth: 1, borderColor: colors.border, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceRaised, position: "relative" },
+  notificationBadge: { position: "absolute", top: -4, right: -4, minWidth: 17, height: 17, paddingHorizontal: 4, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.background },
+  notificationBadgeText: { color: colors.onPrimary, fontSize: 9, fontWeight: "800" },
   headerAvatar: { width: 42, height: 42, borderRadius: 21, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.secondary },
   headerAvatarImage: { width: "100%", height: "100%" },
   headerAvatarText: { color: colors.text, fontSize: 13, fontWeight: "800" },
