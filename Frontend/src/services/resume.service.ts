@@ -80,10 +80,11 @@ export const deleteMyResume = async (resumeId: number) => {
 };
 
 export const reviewMyResume = async (resumeId: number): Promise<ResumeAiReview> => {
+  const config = await getAuthenticatedConfig();
   const response = await axios.post<{ review: ResumeAiReview }>(
     `${API_BASE_URL}/profile/resumes/${resumeId}/review`,
     {},
-    await getAuthenticatedConfig(),
+    { ...config, timeout: 30000 },
   );
   return response.data.review;
 };
@@ -108,7 +109,7 @@ export const getResumeErrorMessage = (error: unknown) => {
     if (error.response?.status === 401) {
       return "Your session has expired. Please log in again.";
     }
-    if (error.code === "ECONNABORTED") {
+    if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
       return "The request timed out. Please check your connection and try again.";
     }
     return error.response?.data?.message || "Unable to reach the resume service. Please try again.";
