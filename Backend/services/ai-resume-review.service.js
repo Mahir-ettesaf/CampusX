@@ -1,6 +1,8 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_RESUME_CONTENT_LENGTH = 12000;
+const MAX_OUTPUT_TOKENS = 2000;
+const reviewFields = ["overall_assessment", "strengths", "improvement_suggestions", "missing_sections", "keyword_suggestions", "ats_considerations"];
 
 export class AiResumeReviewError extends Error {
   constructor(status, message) {
@@ -37,6 +39,21 @@ const normalizeList = (value) => {
   return value.map((item) => item.trim()).filter(Boolean);
 };
 
+const outputContentTypes = (payload) => Array.isArray(payload?.output)
+  ? payload.output.flatMap((item) => Array.isArray(item?.content) ? item.content.map((content) => content?.type).filter(Boolean) : [])
+  : [];
+
+const logResponseDiagnostic = (event, payload) => {
+  console.warn("[AI resume review]", event, {
+    responseId: typeof payload?.id === "string" ? payload.id : null,
+    model: typeof payload?.model === "string" ? payload.model : null,
+    status: typeof payload?.status === "string" ? payload.status : null,
+    hasOutputText: typeof payload?.output_text === "string" && Boolean(payload.output_text.trim()),
+    outputContentTypes: outputContentTypes(payload),
+    errorType: typeof payload?.error?.type === "string" ? payload.error.type : null,
+  });
+};
+
 export const parseResumeReview = (outputText) => {
   let review;
   try {
@@ -45,7 +62,11 @@ export const parseResumeReview = (outputText) => {
     throw new AiResumeReviewError(502, "AI review returned an invalid response. Please try again.");
   }
 
-  if (!review || typeof review !== "object" || typeof review.overall_assessment !== "string" || !review.overall_assessment.trim()) {
+  if (!review || typeof review !== "object" || Array.isArray(review) || typeof review.overall_assessment !== "string" || !review.overall_assessment.trim()) {
+    throw new AiResumeReviewError(502, "AI review returned an invalid response. Please try again.");
+  }
+
+  if (Object.keys(review).some((field) => !reviewFields.includes(field))) {
     throw new AiResumeReviewError(502, "AI review returned an invalid response. Please try again.");
   }
 
@@ -60,10 +81,21 @@ export const parseResumeReview = (outputText) => {
 };
 
 const outputTextFrom = (payload) => {
+  if (payload?.status === "incomplete") {
+    throw new AiResumeReviewError(502, "AI review was incomplete. Please try again.");
+  }
+
+  const refusal = Array.isArray(payload?.output)
+    ? payload.output.flatMap((item) => Array.isArray(item?.content) ? item.content : []).find((item) => item?.type === "refusal")
+    : null;
+  if (refusal) {
+    throw new AiResumeReviewError(502, "AI review could not be completed for this resume. Please try again.");
+  }
+
   if (typeof payload?.output_text === "string" && payload.output_text.trim()) return payload.output_text;
   const text = payload?.output?.flatMap((item) => item.content || []).find((item) => item.type === "output_text")?.text;
   if (typeof text === "string" && text.trim()) return text;
-  throw new AiResumeReviewError(502, "AI review returned an invalid response. Please try again.");
+  throw new AiResumeReviewError(502, "AI review returned no structured output. Please try again.");
 };
 
 export const reviewResumeContent = async ({ title, content }) => {
@@ -84,7 +116,7 @@ export const reviewResumeContent = async ({ title, content }) => {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || "gpt-5-mini",
         store: false,
-        max_output_tokens: 1000,
+        max_output_tokens: MAX_OUTPUT_TOKENS,
         text: { format: { type: "json_schema", name: "resume_review", strict: true, schema: reviewSchema } },
         input: [
           {
@@ -100,11 +132,19 @@ export const reviewResumeContent = async ({ title, content }) => {
     });
 
     if (!response.ok) {
+      const errorPayload = await response.json().catch(() => null);
+      logResponseDiagnostic(`OpenAI request failed with HTTP ${response.status}`, errorPayload);
       if (response.status === 429) throw new AiResumeReviewError(429, "AI resume review is temporarily rate-limited. Please try again later.");
       throw new AiResumeReviewError(502, "AI resume review is currently unavailable. Please try again later.");
     }
 
-    return parseResumeReview(outputTextFrom(await response.json()));
+    const payload = await response.json();
+    try {
+      return parseResumeReview(outputTextFrom(payload));
+    } catch (error) {
+      logResponseDiagnostic(error instanceof AiResumeReviewError ? error.message : "AI review parsing failed", payload);
+      throw error;
+    }
   } catch (error) {
     if (error instanceof AiResumeReviewError) throw error;
     if (error?.name === "AbortError") throw new AiResumeReviewError(504, "AI resume review timed out. Please try again.");
