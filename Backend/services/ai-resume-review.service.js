@@ -2,6 +2,7 @@ const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_RESUME_CONTENT_LENGTH = 12000;
 const MAX_OUTPUT_TOKENS = 2000;
+const RETRY_MAX_OUTPUT_TOKENS = 4000;
 const reviewFields = ["overall_assessment", "strengths", "improvement_suggestions", "missing_sections", "keyword_suggestions", "ats_considerations"];
 
 export class AiResumeReviewError extends Error {
@@ -48,6 +49,7 @@ const logResponseDiagnostic = (event, payload) => {
     responseId: typeof payload?.id === "string" ? payload.id : null,
     model: typeof payload?.model === "string" ? payload.model : null,
     status: typeof payload?.status === "string" ? payload.status : null,
+    incompleteReason: typeof payload?.incomplete_details?.reason === "string" ? payload.incomplete_details.reason : null,
     hasOutputText: typeof payload?.output_text === "string" && Boolean(payload.output_text.trim()),
     outputContentTypes: outputContentTypes(payload),
     errorType: typeof payload?.error?.type === "string" ? payload.error.type : null,
@@ -106,39 +108,48 @@ export const reviewResumeContent = async ({ title, content }) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(OPENAI_RESPONSES_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-5-mini",
-        store: false,
-        max_output_tokens: MAX_OUTPUT_TOKENS,
-        text: { format: { type: "json_schema", name: "resume_review", strict: true, schema: reviewSchema } },
-        input: [
-          {
-            role: "system",
-            content: [{ type: "input_text", text: "Review only the supplied resume title and content. Do not invent qualifications, experience, education, projects, or skills. Identify missing information rather than assuming it exists. Give practical, career-oriented guidance. ATS considerations are suggestions, not guarantees, and this is not a hiring decision. Return only the requested JSON." }],
-          },
-          {
-            role: "user",
-            content: [{ type: "input_text", text: `Resume title:\n${title}\n\nResume content:\n${content.slice(0, MAX_RESUME_CONTENT_LENGTH)}` }],
-          },
-        ],
-      }),
-    });
+    const requestReview = async (maxOutputTokens) => {
+      const response = await fetch(OPENAI_RESPONSES_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: process.env.OPENAI_MODEL || "gpt-5-mini",
+          store: false,
+          max_output_tokens: maxOutputTokens,
+          text: { format: { type: "json_schema", name: "resume_review", strict: true, schema: reviewSchema } },
+          input: [
+            {
+              role: "system",
+              content: [{ type: "input_text", text: "Review only the supplied resume title and content. Do not invent qualifications, experience, education, projects, or skills. Identify missing information rather than assuming it exists. Give practical, career-oriented guidance. ATS considerations are suggestions, not guarantees, and this is not a hiring decision. Return only the requested JSON." }],
+            },
+            {
+              role: "user",
+              content: [{ type: "input_text", text: `Resume title:\n${title}\n\nResume content:\n${content.slice(0, MAX_RESUME_CONTENT_LENGTH)}` }],
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const errorPayload = await response.json().catch(() => null);
-      logResponseDiagnostic(`OpenAI request failed with HTTP ${response.status}`, errorPayload);
-      if (response.status === 429) throw new AiResumeReviewError(429, "AI resume review is temporarily rate-limited. Please try again later.");
-      throw new AiResumeReviewError(502, "AI resume review is currently unavailable. Please try again later.");
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        logResponseDiagnostic(`OpenAI request failed with HTTP ${response.status}`, errorPayload);
+        if (response.status === 429) throw new AiResumeReviewError(429, "AI resume review is temporarily rate-limited. Please try again later.");
+        throw new AiResumeReviewError(502, "AI resume review is currently unavailable. Please try again later.");
+      }
+
+      return response.json();
+    };
+
+    let payload = await requestReview(MAX_OUTPUT_TOKENS);
+    if (payload?.status === "incomplete" && payload?.incomplete_details?.reason === "max_output_tokens") {
+      logResponseDiagnostic("AI review reached the output limit; retrying once with a larger budget", payload);
+      payload = await requestReview(RETRY_MAX_OUTPUT_TOKENS);
     }
 
-    const payload = await response.json();
     try {
       return parseResumeReview(outputTextFrom(payload));
     } catch (error) {
