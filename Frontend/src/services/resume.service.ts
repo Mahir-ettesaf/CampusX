@@ -84,7 +84,7 @@ export const reviewMyResume = async (resumeId: number): Promise<ResumeAiReview> 
   const response = await axios.post<{ review: ResumeAiReview }>(
     `${API_BASE_URL}/profile/resumes/${resumeId}/review`,
     {},
-    { ...config, timeout: 30000 },
+    { ...config, timeout: 50000 },
   );
   return response.data.review;
 };
