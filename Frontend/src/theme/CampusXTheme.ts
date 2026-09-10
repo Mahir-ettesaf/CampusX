@@ -1,26 +1,26 @@
 import { StyleSheet } from "react-native";
 
 export const colors = {
-  background: "#171022",
-  backgroundElevated: "#1D1528",
-  surface: "#24172F",
-  surfaceRaised: "#33213D",
-  input: "#2B1C35",
-  primary: "#C99AF5",
-  primaryPressed: "#B98AEF",
-  secondary: "#F29BEA",
-  accent: "#D84EDB",
-  accentSoft: "#40284B",
-  text: "#FFF8FF",
-  textMuted: "#C9BFD0",
-  border: "#5A3D68",
-  divider: "#40284B",
-  success: "#7DD6AF",
-  warning: "#F2C879",
-  error: "#F28CA5",
-  info: "#D8B4FA",
-  onPrimary: "#21172A",
-  onDark: "#FFF8FF",
+  background: "#070B20",
+  backgroundElevated: "#0C1330",
+  surface: "#111A38",
+  surfaceRaised: "#17234A",
+  input: "#111A37",
+  primary: "#B66CFF",
+  primaryPressed: "#9E59E7",
+  secondary: "#4EDCFF",
+  accent: "#FF5BB7",
+  accentSoft: "#252653",
+  text: "#FAF8FF",
+  textMuted: "#AEB7D2",
+  border: "#2B3A67",
+  divider: "#1D294B",
+  success: "#55DBB0",
+  warning: "#FFD36E",
+  error: "#FF789D",
+  info: "#A78BFA",
+  onPrimary: "#1A1030",
+  onDark: "#FAF8FF",
 } as const;
 
 export const spacing = {
@@ -50,7 +50,7 @@ export const typography = {
 } as const;
 
 export const ui = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: "transparent" },
   screenContent: { padding: spacing.xl, paddingBottom: spacing.xxl },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: spacing.xl },
   card: {

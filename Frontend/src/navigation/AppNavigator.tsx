@@ -88,6 +88,8 @@ import RecommendationsScreen from "../screens/common/RecommendationsScreen";
 import { navigationColors } from "../theme/CampusXTheme";
 import { CampusXDrawerProvider } from "../components/CampusXDrawer";
 import CampusXBottomNavigation from "../components/CampusXBottomNavigation";
+import CampusXAtmosphere from "../components/CampusXAtmosphere";
+import { colors } from "../theme/CampusXTheme";
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef<any>();
@@ -107,10 +109,12 @@ export default function AppNavigator() {
       <NavigationContainer ref={navigationRef} linking={linking} theme={{ ...DarkTheme, colors: { ...DarkTheme.colors, ...navigationColors } }} onReady={updateCurrentRoute} onStateChange={updateCurrentRoute}>
         <CampusXDrawerProvider navigationRef={navigationRef}>
         <View style={styles.shell}>
+        <CampusXAtmosphere />
         <Stack.Navigator
           initialRouteName="Splash"
           screenOptions={{
             headerShown: false,
+            contentStyle: { backgroundColor: "transparent" },
           }}
         >
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -205,4 +209,4 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({ shell: { flex: 1 } });
+const styles = StyleSheet.create({ shell: { flex: 1, backgroundColor: colors.background } });
